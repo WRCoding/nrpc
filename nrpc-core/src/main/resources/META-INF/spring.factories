@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=top.ink.nrpccore.processor.ServiceProcessor,\
+top.ink.nrpccore.processor.ZookeeperClient,top.ink.nrpccore.processor.NrpcProperties,top.ink.nrpccore.processor.CallProcessor
