@@ -6,7 +6,6 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.ZkClient;
 import org.springframework.beans.BeansException;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Component;
 import top.ink.nrpccore.anno.NService;
 import top.ink.nrpccore.codec.MessageFrameDecoder;
 import top.ink.nrpccore.codec.NrpcCodec;
+import top.ink.nrpccore.entity.RpcProperties;
 import top.ink.nrpccore.handle.NrpcRequestHandle;
 
 import javax.annotation.Resource;
@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServiceProcessor implements ApplicationContextAware, InitializingBean {
 
     @Resource
-    private NrpcProperties nrpcProperties;
+    private RpcProperties rpcProperties;
 
     private ZkClient zkClient;
 
@@ -44,47 +44,50 @@ public class ServiceProcessor implements ApplicationContextAware, InitializingBe
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        Map<String, Object> NServiceMap = applicationContext.getBeansWithAnnotation(NService.class);
-        if (NServiceMap.size() > 0) {
+        Map<String, Object> nServiceMap = applicationContext.getBeansWithAnnotation(NService.class);
+        if (nServiceMap.size() > 0) {
+            start();
             zkClient = (ZkClient) applicationContext.getBean("zkClient");
-            NServiceMap.forEach((key, value) -> {
-                try {
-                    registerService(value);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            nServiceMap.forEach((key, value) -> {
+                registerService(value);
                 log.info("key:{},value:{}", key, value.getClass().getAnnotation(NService.class).ServiceName());
             });
         }
     }
 
-    private void registerService(Object value) throws InterruptedException {
+    private void registerService(Object value){
         String serviceName = value.getClass().getAnnotation(NService.class).ServiceName();
         String rootPath = PREFIX + serviceName;
         if (!zkClient.exists(rootPath)) {
             zkClient.createPersistent(rootPath);
         }
-        String path = rootPath + PREFIX + nrpcProperties.getServerHost() + ":" + nrpcProperties.getServerPort();
+        String path = rootPath + PREFIX + rpcProperties.getServerHost() + ":" + rpcProperties.getServerPort();
         zkClient.createEphemeral(path);
         SERVICE_MAP.put(serviceName, value);
-        NioEventLoopGroup boss = new NioEventLoopGroup(1);
-        NioEventLoopGroup worker = new NioEventLoopGroup();
+    }
 
-        ServerBootstrap serverBootstrap = new ServerBootstrap().group(boss, worker)
-                .channel(NioServerSocketChannel.class)
-                .childHandler(new ChannelInitializer<NioSocketChannel>() {
-                    @Override
-                    protected void initChannel(NioSocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new MessageFrameDecoder());
-                        ch.pipeline().addLast(new NrpcCodec());
-                        ch.pipeline().addLast(new NrpcRequestHandle(SERVICE_MAP));
-                    }
-                });
-        ChannelFuture future = serverBootstrap.bind(nrpcProperties.getServerPort()).sync();
-        future.channel().closeFuture().addListener(elem -> {
-            boss.shutdownGracefully();
-            worker.shutdownGracefully();
-        });
+    private void start(){
+        try {
+            NioEventLoopGroup boss = new NioEventLoopGroup(1);
+            NioEventLoopGroup worker = new NioEventLoopGroup();
+            ServerBootstrap serverBootstrap = new ServerBootstrap().group(boss, worker)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new ChannelInitializer<NioSocketChannel>() {
+                        @Override
+                        protected void initChannel(NioSocketChannel ch) {
+                            ch.pipeline().addLast(new MessageFrameDecoder())
+                                    .addLast(new NrpcCodec())
+                                    .addLast(new NrpcRequestHandle(SERVICE_MAP));
+                        }
+                    });
+            ChannelFuture future = serverBootstrap.bind(rpcProperties.getServerPort()).sync();
+            future.channel().closeFuture().addListener(elem -> {
+                boss.shutdownGracefully();
+                worker.shutdownGracefully();
+            });
+        } catch (InterruptedException e) {
+            log.error("netty 启动失败: {}", e.getMessage());
+        }
     }
 
 

@@ -1,6 +1,5 @@
 package top.ink.nrpccore.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.Arrays;
@@ -12,7 +11,7 @@ import java.util.Arrays;
  * date:2022-05-14 09:40
  */
 @Data
-public class NrpcRequest {
+public class RpcRequest {
 
     private byte type = 0;
     /** 序列号 */
@@ -26,7 +25,7 @@ public class NrpcRequest {
     /** 参数值 */
     private Object[] parameterValues;
 
-    public NrpcRequest(String nid, String serviceName, String methodName, Class[] parameterTypes, Object[] parameterValues) {
+    public RpcRequest(String nid, String serviceName, String methodName, Class[] parameterTypes, Object[] parameterValues) {
         this.nid = nid;
         this.serviceName = serviceName;
         this.methodName = methodName;

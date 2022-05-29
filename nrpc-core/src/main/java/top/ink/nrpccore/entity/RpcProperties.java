@@ -1,4 +1,4 @@
-package top.ink.nrpccore.processor;
+package top.ink.nrpccore.entity;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -11,18 +11,22 @@ import org.springframework.stereotype.Component;
  * date:2022-05-13 21:23
  */
 
-@ConfigurationProperties(prefix = "nrpc")
+@ConfigurationProperties(prefix = "n-rpc")
 @Data
-@Component
-public class NrpcProperties {
+@Component(value = "RpcProperties")
+public class RpcProperties {
 
     private String zkHost;
 
-    private Integer zkConnectTimeout;
+    private Integer zkConnectTimeout = 2000;
+
+    private Integer zkBaseSleepTimeMs = 1000;
+
+    private Integer zkRetry = 3;
 
     private String serverHost;
 
     private Integer serverPort;
 
-
+    private String route;
 }

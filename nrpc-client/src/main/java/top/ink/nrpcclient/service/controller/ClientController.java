@@ -3,7 +3,7 @@ package top.ink.nrpcclient.service.controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.ink.api.callapi.HelloServiceInterface;
-import top.ink.nrpccore.anno.Ncall;
+import top.ink.nrpccore.anno.NCall;
 
 /**
  * desc: Client
@@ -14,7 +14,7 @@ import top.ink.nrpccore.anno.Ncall;
 @RestController
 public class ClientController {
 
-    @Ncall(ServiceName = "HelloServiceInterface")
+//    @NCall(ServiceName = "HelloServiceInterface")
     public HelloServiceInterface helloServiceInterface;
 
     @GetMapping("/a")

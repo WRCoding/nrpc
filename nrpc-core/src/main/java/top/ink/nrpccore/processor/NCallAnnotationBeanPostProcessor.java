@@ -5,14 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyValues;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
 import org.springframework.beans.factory.support.MergedBeanDefinitionPostProcessor;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.util.ReflectionUtils;
-import top.ink.nrpccore.anno.Ncall;
+import top.ink.nrpccore.anno.NCall;
+import top.ink.nrpccore.proxy.RpcProxy;
 import top.ink.nrpccore.util.SpringBeanFactory;
 
 import javax.annotation.PostConstruct;
@@ -63,21 +62,21 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
 
     private InjectionMetadata findInjectionMetadata(String beanName, Class<?> clazz) {
         Collection<NCallAnnotationBeanPostProcessor.AnnotatedFieldElement> fieldElements = findFieldAnnotationMetadata(clazz);
-        return fieldElements.size() > 0 ? new AnnotatedInjectionMetadata(clazz,combine(fieldElements)) : null;
+        return fieldElements.size() > 0 ? new AnnotatedInjectionMetadata(clazz, combine(fieldElements)) : null;
     }
 
     private Collection<AnnotatedFieldElement> findFieldAnnotationMetadata(Class<?> clazz) {
         final List<NCallAnnotationBeanPostProcessor.AnnotatedFieldElement> elements = new LinkedList<>();
 
         ReflectionUtils.doWithFields(clazz, field -> {
-            if (field.isAnnotationPresent(Ncall.class)){
+            if (field.isAnnotationPresent(NCall.class)){
                 elements.add(new AnnotatedFieldElement(field));
             }
         });
         return elements;
     }
 
-    class AnnotatedInjectionMetadata extends InjectionMetadata {
+    static class AnnotatedInjectionMetadata extends InjectionMetadata {
 
         private final Collection<InjectedElement> fieldElements;
 
@@ -88,14 +87,13 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
         }
 
 
-
         public Collection<InjectedElement> getFieldElements() {
             return fieldElements;
         }
 
     }
 
-    class AnnotatedFieldElement extends InjectionMetadata.InjectedElement {
+    static class AnnotatedFieldElement extends InjectionMetadata.InjectedElement {
 
         private final Field field;
 
@@ -107,13 +105,13 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
         @Override
         protected void inject(Object bean, String beanName, PropertyValues pvs) throws Throwable {
 
-            String serviceName = field.getAnnotation(Ncall.class).ServiceName();
-            if (!NrpcProxy.SERVICE_NAME_MAP_CHANNEL.containsKey(serviceName)){
-                Channel channel = NrpcProxy.initChannel(serviceName);
-                NrpcProxy.SERVICE_NAME_MAP_CHANNEL.put(serviceName,channel);
-                NrpcProxy.CHANNEL_MAP_SERVICE_NAME.put(channel,serviceName);
+            String serviceName = field.getAnnotation(NCall.class).ServiceName();
+            if (!RpcProxy.SERVICE_NAME_MAP_CHANNEL.containsKey(serviceName)){
+                Channel channel = RpcProxy.initChannel(serviceName);
+                RpcProxy.SERVICE_NAME_MAP_CHANNEL.put(serviceName,channel);
+                RpcProxy.CHANNEL_MAP_SERVICE_NAME.put(channel,serviceName);
             }
-            Object o = NrpcProxy.getProxy(field);
+            Object o = RpcProxy.getProxy(field);
             ReflectionUtils.makeAccessible(field);
             field.set(bean,o);
         }

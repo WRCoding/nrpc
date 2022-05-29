@@ -3,11 +3,8 @@ package top.ink.nrpccore.util;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Priority;
 
 @Component(value = "SpringBeanFactory")
 public class SpringBeanFactory implements ApplicationContextAware{
@@ -20,6 +17,10 @@ public class SpringBeanFactory implements ApplicationContextAware{
 
 	public static <T> T getBean(String name,Class<T> clazz){
 		return context.getBean(name,clazz);
+	}
+
+	public static Object getBean(String name){
+		return context.getBean(name);
 	}
 
 

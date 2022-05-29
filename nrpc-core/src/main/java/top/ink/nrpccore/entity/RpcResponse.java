@@ -9,7 +9,7 @@ import lombok.Data;
  * date:2022-05-14 09:46
  */
 @Data
-public class NrpcResponse {
+public class RpcResponse {
 
     private byte type = 1;
 

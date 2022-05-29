@@ -2,10 +2,10 @@ package top.ink.nrpcclient;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import top.ink.nrpccore.anno.EnableNrpc;
+import top.ink.nrpccore.anno.EnableNRpc;
 
 @SpringBootApplication
-@EnableNrpc
+@EnableNRpc
 public class NrpcClientApplication {
 
 

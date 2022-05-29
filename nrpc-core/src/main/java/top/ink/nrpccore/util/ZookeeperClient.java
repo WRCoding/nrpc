@@ -1,12 +1,10 @@
-package top.ink.nrpccore.processor;
+package top.ink.nrpccore.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.ZkClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 
-import javax.annotation.Resource;
 
 /**
  * desc: zk客户端

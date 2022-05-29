@@ -1,21 +1,20 @@
 package top.ink.nrpccore.anno;
 
-import org.springframework.context.annotation.Import;
-import top.ink.nrpccore.processor.NCallRegistrar;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * desc: EnableNrpc
+ * desc: 调用注册的服务注解
  *
  * @author ink
- * date:2022-05-14 15:51
+ * date:2022-05-12 22:16
  */
-@Target({ElementType.TYPE})
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-@Import(NCallRegistrar.class)
-public @interface EnableNrpc {
+public @interface NCall {
+
+    /** 要注册的服务类名*/
+    String ServiceName();
 }

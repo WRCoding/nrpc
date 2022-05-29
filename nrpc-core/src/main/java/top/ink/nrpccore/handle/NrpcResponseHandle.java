@@ -6,8 +6,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
-import top.ink.nrpccore.entity.NrpcResponse;
-import top.ink.nrpccore.processor.NrpcProxy;
+import top.ink.nrpccore.entity.RpcResponse;
+import top.ink.nrpccore.proxy.RpcProxy;
 
 import java.util.Map;
 import java.util.concurrent.*;
@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  */
 @Slf4j
 @ChannelHandler.Sharable
-public class NrpcResponseHandle extends SimpleChannelInboundHandler<NrpcResponse> {
+public class NrpcResponseHandle extends SimpleChannelInboundHandler<RpcResponse> {
 
     public static final Map<String, Promise<Object>> PROMISE_MAP = new ConcurrentHashMap<>();
 
@@ -29,16 +29,16 @@ public class NrpcResponseHandle extends SimpleChannelInboundHandler<NrpcResponse
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
-        String serviceName = NrpcProxy.CHANNEL_MAP_SERVICE_NAME.get(channel);
-        NrpcProxy.CHANNEL_MAP_SERVICE_NAME.remove(channel);
-        NrpcProxy.SERVICE_NAME_MAP_CHANNEL.remove(serviceName);
+        String serviceName = RpcProxy.CHANNEL_MAP_SERVICE_NAME.get(channel);
+        RpcProxy.CHANNEL_MAP_SERVICE_NAME.remove(channel);
+        RpcProxy.SERVICE_NAME_MAP_CHANNEL.remove(serviceName);
         log.info("断开连接了!");
         ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         long start = System.currentTimeMillis();
         scheduledExecutorService.scheduleAtFixedRate(new Task(serviceName, start, scheduledExecutorService,(newChannel -> {
             log.info("newChannel id: {}", newChannel.id().asShortText());
-            NrpcProxy.CHANNEL_MAP_SERVICE_NAME.put(newChannel, serviceName);
-            NrpcProxy.SERVICE_NAME_MAP_CHANNEL.put(serviceName,newChannel);
+            RpcProxy.CHANNEL_MAP_SERVICE_NAME.put(newChannel, serviceName);
+            RpcProxy.SERVICE_NAME_MAP_CHANNEL.put(serviceName,newChannel);
             stopTask(scheduledExecutorService);
         })), 1, 3, TimeUnit.SECONDS);
         super.channelInactive(ctx);
@@ -68,7 +68,7 @@ public class NrpcResponseHandle extends SimpleChannelInboundHandler<NrpcResponse
             } else {
                 log.info("---正在重连---");
                 try {
-                    Channel channel = NrpcProxy.initChannel(serviceName);
+                    Channel channel = RpcProxy.initChannel(serviceName);
                     if (channel != null){
                         consumer.accept(channel);
                     }
@@ -86,13 +86,13 @@ public class NrpcResponseHandle extends SimpleChannelInboundHandler<NrpcResponse
 
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, NrpcResponse nrpcResponse) {
-        log.info("nrpcResponse: {}", nrpcResponse);
-        String nid = nrpcResponse.getNid();
+    protected void channelRead0(ChannelHandlerContext ctx, RpcResponse rpcResponse) {
+        log.info("nrpcResponse: {}", rpcResponse);
+        String nid = rpcResponse.getNid();
         Promise<Object> promise = PROMISE_MAP.get(nid);
         if (promise != null) {
-            Object returnValue = nrpcResponse.getReturnValue();
-            Exception exception = nrpcResponse.getException();
+            Object returnValue = rpcResponse.getReturnValue();
+            Exception exception = rpcResponse.getException();
             if (exception != null) {
                 promise.setFailure(exception);
             } else {

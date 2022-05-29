@@ -4,13 +4,11 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
-import top.ink.nrpccore.entity.NrpcRequest;
-import top.ink.nrpccore.entity.NrpcResponse;
+import top.ink.nrpccore.entity.RpcRequest;
+import top.ink.nrpccore.entity.RpcResponse;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * desc: NrpcRequestHandle
@@ -20,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @ChannelHandler.Sharable
-public class NrpcRequestHandle extends SimpleChannelInboundHandler<NrpcRequest> {
+public class NrpcRequestHandle extends SimpleChannelInboundHandler<RpcRequest> {
 
     private Map<String, Object> serviceMap;
 
@@ -29,9 +27,9 @@ public class NrpcRequestHandle extends SimpleChannelInboundHandler<NrpcRequest> 
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, NrpcRequest nrpcRequest) throws Exception {
-        NrpcResponse nrpcResponse = new NrpcResponse();
-        nrpcResponse.setNid(nrpcRequest.getNid());
+    protected void channelRead0(ChannelHandlerContext ctx, RpcRequest nrpcRequest) throws Exception {
+        RpcResponse rpcResponse = new RpcResponse();
+        rpcResponse.setNid(nrpcRequest.getNid());
         try {
             log.info("nrpcRequest: {}", nrpcRequest);
             String serviceName = nrpcRequest.getServiceName();
@@ -40,11 +38,11 @@ public class NrpcRequestHandle extends SimpleChannelInboundHandler<NrpcRequest> 
             Method method = object.getClass().getMethod(methodName, nrpcRequest.getParameterTypes());
             Object invoke = method.invoke(object, nrpcRequest.getParameterValues());
             log.info("invoke: {}", invoke);
-            nrpcResponse.setReturnValue(invoke);
+            rpcResponse.setReturnValue(invoke);
         } catch (Exception e) {
             log.error("invoke error: {}", e);
-            nrpcResponse.setException(new Exception(e.getCause().getMessage()));
+            rpcResponse.setException(new Exception(e.getCause().getMessage()));
         }
-        ctx.channel().writeAndFlush(nrpcResponse);
+        ctx.channel().writeAndFlush(rpcResponse);
     }
 }
