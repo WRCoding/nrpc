@@ -1,6 +1,8 @@
 package top.ink.nrpccore.registry;
 
 import top.ink.nrpccore.entity.RpcRequest;
+import top.ink.nrpccore.route.RouteHandle;
+import top.ink.nrpccore.util.SpringBeanFactory;
 
 /**
  * desc: 服务注册接口
@@ -38,4 +40,13 @@ public interface ServiceRegister {
     */
     String findServiceAddress(RpcRequest rpcRequest);
 
+    /**
+     * 获取RouteHandle
+     * @author longxun.wang
+     * @date 2022/5/30 15:25
+     * @return top.ink.nrpccore.route.RouteHandle
+     */
+    default RouteHandle getRouteHandle(){
+        return SpringBeanFactory.getBean("RouteHandle",RouteHandle.class);
+    }
 }

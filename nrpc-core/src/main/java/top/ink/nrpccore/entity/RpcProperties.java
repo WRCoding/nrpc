@@ -3,6 +3,8 @@ package top.ink.nrpccore.entity;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import top.ink.nrpccore.constant.RouteType;
+import top.ink.nrpccore.constant.ServiceRegisterType;
 
 /**
  * desc: NrpcServerProperties
@@ -24,9 +26,7 @@ public class RpcProperties {
 
     private Integer zkRetry = 3;
 
-    private String serverHost;
+    private String route = RouteType.RANDOM.name();
 
-    private Integer serverPort;
-
-    private String route;
+    private String serviceRegister = ServiceRegisterType.ZOOKEEPER.name();
 }

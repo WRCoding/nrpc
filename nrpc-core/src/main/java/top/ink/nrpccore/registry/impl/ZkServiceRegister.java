@@ -22,29 +22,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author ink
  * date:2022-05-29 19:51
  */
-@Component
-@DependsOn(value = "SpringBeanFactory")
+
 @Slf4j
 public class ZkServiceRegister implements ServiceRegister {
 
     private static final Map<String ,Object> SERVICE_INSTANCE_MAP = new ConcurrentHashMap<>();
     private RouteHandle routeHandle;
 
-    public ZkServiceRegister() {
-        log.info("--ZkServiceRegister--");
-        routeHandle = getRouteHandle();
-    }
 
-    private RouteHandle getRouteHandle() {
-        RpcProperties rpcProperties = SpringBeanFactory.getBean("RpcProperties", RpcProperties.class);
-        String route = rpcProperties.getRoute();
-        log.info("route: {}", route);
-        if ("custom".equals(route)){
-            ServiceLoader<RouteHandle> load = ServiceLoader.load(RouteHandle.class);
-            return load.iterator().next();
-        }
-        return null;
-    }
 
     @Override
     public void registerService(String serviceName, String address) {
@@ -66,7 +51,7 @@ public class ZkServiceRegister implements ServiceRegister {
         String serviceName = rpcRequest.getServiceName();
         CuratorFramework zkClient = CuratorUtils.getZkClient();
         List<String> serviceAddressList = CuratorUtils.getChildrenNodes(zkClient, serviceName);
-
+        String serve = getRouteHandle().routeServe(serviceAddressList);
         return null;
     }
 }
