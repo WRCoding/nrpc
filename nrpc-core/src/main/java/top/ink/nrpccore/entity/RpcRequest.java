@@ -21,11 +21,11 @@ public class RpcRequest {
     /** 方法名 */
     private String methodName;
     /** 参数类型 */
-    private Class[] parameterTypes;
+    private Class<?>[] parameterTypes;
     /** 参数值 */
     private Object[] parameterValues;
 
-    public RpcRequest(String nid, String serviceName, String methodName, Class[] parameterTypes, Object[] parameterValues) {
+    public RpcRequest(String nid, String serviceName, String methodName, Class<?>[] parameterTypes, Object[] parameterValues) {
         this.nid = nid;
         this.serviceName = serviceName;
         this.methodName = methodName;

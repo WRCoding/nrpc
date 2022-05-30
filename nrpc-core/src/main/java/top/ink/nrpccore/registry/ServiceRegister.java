@@ -33,12 +33,12 @@ public interface ServiceRegister {
 
     /**
      * Description: 查找服务地址
-     * @param rpcRequest
+     * @param RpcRequest
      * @return java.lang.String
      * Author: ink
      * Date: 2022/5/29
     */
-    String findServiceAddress(RpcRequest rpcRequest);
+    String findServiceAddress(RpcRequest RpcRequest);
 
     /**
      * 获取RouteHandle

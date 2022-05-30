@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.ZkClient;
 import top.ink.nrpccore.anno.NCall;
 import top.ink.nrpccore.codec.MessageFrameDecoder;
-import top.ink.nrpccore.codec.NrpcCodec;
+import top.ink.nrpccore.codec.RpcCodec;
 import top.ink.nrpccore.entity.RpcRequest;
 import top.ink.nrpccore.handle.NrpcResponseHandle;
 import top.ink.nrpccore.util.SpringBeanFactory;
@@ -88,7 +88,7 @@ public class RpcProxy {
                         @Override
                         protected void initChannel(NioSocketChannel ch) {
                             ch.pipeline().addLast(new MessageFrameDecoder());
-                            ch.pipeline().addLast(new NrpcCodec());
+                            ch.pipeline().addLast(new RpcCodec());
                             ch.pipeline().addLast(new LoggingHandler());
                             ch.pipeline().addLast(new NrpcResponseHandle());
                         }

@@ -15,7 +15,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 import top.ink.nrpccore.anno.NService;
 import top.ink.nrpccore.codec.MessageFrameDecoder;
-import top.ink.nrpccore.codec.NrpcCodec;
+import top.ink.nrpccore.codec.RpcCodec;
 import top.ink.nrpccore.entity.RpcProperties;
 import top.ink.nrpccore.handle.NrpcRequestHandle;
 
@@ -76,7 +76,7 @@ public class ServiceProcessor implements ApplicationContextAware, InitializingBe
                         @Override
                         protected void initChannel(NioSocketChannel ch) {
                             ch.pipeline().addLast(new MessageFrameDecoder())
-                                    .addLast(new NrpcCodec())
+                                    .addLast(new RpcCodec())
                                     .addLast(new NrpcRequestHandle(SERVICE_MAP));
                         }
                     });

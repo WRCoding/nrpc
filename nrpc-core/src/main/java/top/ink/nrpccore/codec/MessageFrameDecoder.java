@@ -2,6 +2,7 @@ package top.ink.nrpccore.codec;
 
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import org.springframework.stereotype.Component;
+import top.ink.nrpccore.constant.ProtocolConstants;
 
 /**
  * desc: decoder
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class MessageFrameDecoder extends LengthFieldBasedFrameDecoder {
 
     public MessageFrameDecoder(){
-        this(1024,1,4,0,0);
+        this(ProtocolConstants.MAX_FRAME,6,4,-10,0);
     }
 
     public MessageFrameDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength, int lengthAdjustment, int initialBytesToStrip) {

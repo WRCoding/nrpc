@@ -2,18 +2,13 @@ package top.ink.nrpccore.registry.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
-import org.springframework.context.annotation.DependsOn;
-import org.springframework.stereotype.Component;
-import top.ink.nrpccore.entity.RpcProperties;
 import top.ink.nrpccore.entity.RpcRequest;
 import top.ink.nrpccore.registry.CuratorUtils;
 import top.ink.nrpccore.registry.ServiceRegister;
 import top.ink.nrpccore.route.RouteHandle;
-import top.ink.nrpccore.util.SpringBeanFactory;
 
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -47,8 +42,8 @@ public class ZkServiceRegister implements ServiceRegister {
     }
 
     @Override
-    public String findServiceAddress(RpcRequest rpcRequest) {
-        String serviceName = rpcRequest.getServiceName();
+    public String findServiceAddress(RpcRequest RpcRequest) {
+        String serviceName = RpcRequest.getServiceName();
         CuratorFramework zkClient = CuratorUtils.getZkClient();
         List<String> serviceAddressList = CuratorUtils.getChildrenNodes(zkClient, serviceName);
         String serve = getRouteHandle().routeServe(serviceAddressList);
