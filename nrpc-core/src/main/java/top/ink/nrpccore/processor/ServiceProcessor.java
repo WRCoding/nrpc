@@ -14,8 +14,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 import top.ink.nrpccore.anno.NService;
-import top.ink.nrpccore.codec.MessageFrameDecoder;
-import top.ink.nrpccore.codec.RpcCodec;
+import top.ink.nrpccore.netty.MessageFrameDecoder;
+import top.ink.nrpccore.netty.RpcCodec;
 import top.ink.nrpccore.entity.RpcProperties;
 import top.ink.nrpccore.handle.NrpcRequestHandle;
 

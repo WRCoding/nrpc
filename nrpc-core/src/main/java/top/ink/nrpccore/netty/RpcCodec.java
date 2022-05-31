@@ -1,14 +1,14 @@
-package top.ink.nrpccore.codec;
+package top.ink.nrpccore.netty;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageCodec;
 import lombok.extern.slf4j.Slf4j;
+import top.ink.nrpccore.codec.RpcJsonSerializer;
+import top.ink.nrpccore.codec.Serializer;
 import top.ink.nrpccore.constant.ProtocolConstants;
 import top.ink.nrpccore.constant.SerializerType;
-import top.ink.nrpccore.entity.RpcProtocol;
-import top.ink.nrpccore.entity.RpcRequest;
-import top.ink.nrpccore.entity.RpcResponse;
+import top.ink.nrpccore.entity.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public class RpcCodec extends ByteToMessageCodec<RpcProtocol> {
 
-    private static final AtomicInteger RPC_ID = new AtomicInteger();
 
     @Override
     protected void encode(ChannelHandlerContext ctx, RpcProtocol rpcProtocol, ByteBuf byteBuf) {
@@ -37,7 +36,7 @@ public class RpcCodec extends ByteToMessageCodec<RpcProtocol> {
         byteBuf.writerIndex(byteBuf.writerIndex() + 4);
         byteBuf.writeByte(msgType);
         byteBuf.writeByte(serializerType);
-        byteBuf.writeInt(RPC_ID.getAndIncrement());
+        byteBuf.writeInt(rpcProtocol.getSeqId());
 
         byte[] dataBytes = null;
         int length = ProtocolConstants.HEAD_LEN;
@@ -63,19 +62,33 @@ public class RpcCodec extends ByteToMessageCodec<RpcProtocol> {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> out) {
         checkMagicNumAndVersion(byteBuf);
-        byte type = byteBuf.readByte();
-        int len = byteBuf.readInt();
-        byte[] bytes = new byte[len];
-        byteBuf.readBytes(bytes, 0, len);
-        Algorithm algorithm = Algorithm.values()[0];
-        if (type == 0){
-            RpcRequest nrpcRequest = algorithm.deserialize(RpcRequest.class, bytes);
-            log.info("decode: {}",nrpcRequest);
-            out.add(nrpcRequest);
-        }else{
-            RpcResponse rpcResponse = algorithm.deserialize(RpcResponse.class, bytes);
-            log.info("decode: {}", rpcResponse);
-            out.add(rpcResponse);
+        int length = byteBuf.readInt();
+        byte msgType = byteBuf.readByte();
+        byte serializerType = byteBuf.readByte();
+        int rpcId = byteBuf.readInt();
+        if (msgType == ProtocolConstants.PING || msgType == ProtocolConstants.PONG){
+            String data = msgType == ProtocolConstants.PING ? "ping" : "pong";
+            RpcHeartBeat rpcHeartBeat = RpcHeartBeat.builder()
+                    .msgType(msgType)
+                    .rpcId(rpcId)
+                    .data(data).build();
+            out.add(rpcHeartBeat);
+        }
+
+        int dataLen = length - ProtocolConstants.HEAD_LEN;
+
+        if (dataLen > 0){
+            byte[] bytes = new byte[dataLen];
+            byteBuf.readBytes(bytes);
+            Serializer serializer = getSerializer(serializerType);
+            if (msgType == ProtocolConstants.RPC_REQUEST){
+                RpcRequest rpcRequest = serializer.deserialize(RpcRequest.class, bytes);
+                out.add(rpcRequest);
+            }
+            if (msgType == ProtocolConstants.RPC_RESPONSE){
+                RpcResponse rpcResponse = serializer.deserialize(RpcResponse.class, bytes);
+                out.add(rpcResponse);
+            }
         }
     }
 
@@ -91,5 +104,6 @@ public class RpcCodec extends ByteToMessageCodec<RpcProtocol> {
         if (version != ProtocolConstants.VERSION) {
             throw new RuntimeException("version isn't compatible" + version);
         }
+        byte padding = byteBuf.readByte();
     }
 }

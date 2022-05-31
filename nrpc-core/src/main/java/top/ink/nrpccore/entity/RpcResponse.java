@@ -1,6 +1,8 @@
 package top.ink.nrpccore.entity;
 
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * desc: nrpc响应实体
@@ -8,13 +10,10 @@ import lombok.Data;
  * @author ink
  * date:2022-05-14 09:46
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class RpcResponse {
-
-    private byte type = 1;
-
-    /** 序列号 */
-    private String nid;
+@Builder
+public class RpcResponse extends RpcMessage{
 
     private Object returnValue;
 

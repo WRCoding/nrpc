@@ -46,7 +46,6 @@ public class ZkServiceRegister implements ServiceRegister {
         String serviceName = RpcRequest.getServiceName();
         CuratorFramework zkClient = CuratorUtils.getZkClient();
         List<String> serviceAddressList = CuratorUtils.getChildrenNodes(zkClient, serviceName);
-        String serve = getRouteHandle().routeServe(serviceAddressList);
-        return null;
+        return getRouteHandle().routeServe(serviceAddressList);
     }
 }

@@ -1,6 +1,9 @@
 package top.ink.nrpccore.entity;
 
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.Arrays;
 
@@ -10,12 +13,12 @@ import java.util.Arrays;
  * @author ink
  * date:2022-05-14 09:40
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class RpcRequest {
+@Builder
+public class RpcRequest extends RpcMessage {
 
-    private byte type = 0;
-    /** 序列号 */
-    private String nid;
+
     /** 服务名 */
     private String serviceName;
     /** 方法名 */
@@ -25,22 +28,5 @@ public class RpcRequest {
     /** 参数值 */
     private Object[] parameterValues;
 
-    public RpcRequest(String nid, String serviceName, String methodName, Class<?>[] parameterTypes, Object[] parameterValues) {
-        this.nid = nid;
-        this.serviceName = serviceName;
-        this.methodName = methodName;
-        this.parameterTypes = parameterTypes;
-        this.parameterValues = parameterValues;
-    }
 
-    @Override
-    public String toString() {
-        return "NrpcRequest{" +
-                "nid='" + nid + '\'' +
-                ", serviceName='" + serviceName + '\'' +
-                ", methodName='" + methodName + '\'' +
-                ", parameterTypes=" + Arrays.toString(parameterTypes) +
-                ", parameterValues=" + Arrays.toString(parameterValues) +
-                '}';
-    }
 }

@@ -11,13 +11,15 @@ import io.netty.util.concurrent.DefaultPromise;
 import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.ZkClient;
 import top.ink.nrpccore.anno.NCall;
-import top.ink.nrpccore.codec.MessageFrameDecoder;
-import top.ink.nrpccore.codec.RpcCodec;
+import top.ink.nrpccore.netty.MessageFrameDecoder;
+import top.ink.nrpccore.netty.RpcCodec;
 import top.ink.nrpccore.entity.RpcRequest;
 import top.ink.nrpccore.handle.NrpcResponseHandle;
 import top.ink.nrpccore.util.SpringBeanFactory;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +34,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * date:2022-05-14 19:47
  */
 @Slf4j
-public class RpcProxy {
+public class RpcProxy implements InvocationHandler {
 
 
     private static final String DIAGONAL = "/";
@@ -44,6 +46,10 @@ public class RpcProxy {
 
     /** 缓存proxy对象,提升性能 */
     public static final Map<String, Object> PROXY_MAP = new ConcurrentHashMap<>();
+
+    public <T> T getProxy(Class<T> clazz){
+        return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, this);
+    }
 
     public static Object getProxy(Field field) throws ClassNotFoundException {
         String className = field.getType().getName();
@@ -103,5 +109,11 @@ public class RpcProxy {
         }else{
             return null;
         }
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+        return null;
     }
 }

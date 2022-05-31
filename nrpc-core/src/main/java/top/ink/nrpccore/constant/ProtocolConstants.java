@@ -17,5 +17,7 @@ public class ProtocolConstants {
     public static final byte PONG = 4;
     public static final int MAX_FRAME = 10 * 1024 * 1024;
 
+    public static final String PING_STR = "ping";
+    public static final String PONG_STR = "pong";
 
 }

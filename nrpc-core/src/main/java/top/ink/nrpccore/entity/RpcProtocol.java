@@ -14,9 +14,8 @@ import lombok.Data;
 public class RpcProtocol {
     private byte[] magicNum;
     private byte version;
-    private int length;
     private byte msgType;
     private byte serializerType;
-    private int rpcId;
+    private int seqId;
     private Object data;
 }

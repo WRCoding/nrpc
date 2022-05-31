@@ -1,4 +1,4 @@
-package top.ink.nrpccore.codec;
+package top.ink.nrpccore.netty;
 
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import org.springframework.stereotype.Component;
