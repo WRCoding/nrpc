@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Arrays;
 
@@ -15,7 +16,7 @@ import java.util.Arrays;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Builder
+@SuperBuilder
 public class RpcRequest extends RpcMessage {
 
 

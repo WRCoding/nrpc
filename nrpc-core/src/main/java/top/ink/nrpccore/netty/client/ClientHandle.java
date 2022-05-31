@@ -28,7 +28,7 @@ public class ClientHandle extends SimpleChannelInboundHandler<RpcMessage> {
 
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, RpcMessage rpcMessage) throws Exception {
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, RpcMessage rpcMessage) {
         if (rpcMessage.getMsgType() == ProtocolConstants.RPC_RESPONSE) {
             RpcResponse rpcResponse = (RpcResponse) rpcMessage;
             Object value = rpcResponse.getReturnValue();

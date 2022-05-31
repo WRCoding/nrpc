@@ -36,9 +36,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class Client {
-    private Bootstrap bootstrap;
-    private ServiceRegister serviceRegister;
-    private static Map<String, Channel> CHANNEL_MAP = new ConcurrentHashMap<>();
+    private final Bootstrap bootstrap;
+    private final ServiceRegister serviceRegister;
+
+    private static final Map<String, Channel> CHANNEL_MAP = new ConcurrentHashMap<>();
+
+    /** 反存Channel和Service的关系,方便重连 */
+    public static final Map<Channel, String> CHANNEL_MAP_SERVICE = new ConcurrentHashMap<>();
+
     public static AtomicInteger SEQ_ID = new AtomicInteger();
 
 
@@ -63,7 +68,7 @@ public class Client {
 
     @SneakyThrows
     private Channel connect(String address){
-        CompletableFuture<Channel> cf = new CompletableFuture();
+        CompletableFuture<Channel> cf = new CompletableFuture<>();
         String[] ipAndPort = address.split(":");
         InetSocketAddress socketAddress = new InetSocketAddress(ipAndPort[0], Integer.parseInt(ipAndPort[1]));
         bootstrap.connect(socketAddress).addListener( (ChannelFutureListener) future -> {
@@ -108,6 +113,7 @@ public class Client {
         if (channel == null){
             channel = connect(serviceAddress);
             CHANNEL_MAP.put(serviceAddress, channel);
+            CHANNEL_MAP_SERVICE.put(channel, serviceAddress);
         }
         return channel;
     }

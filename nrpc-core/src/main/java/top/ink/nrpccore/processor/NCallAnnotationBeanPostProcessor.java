@@ -11,6 +11,7 @@ import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.ReflectionUtils;
 import top.ink.nrpccore.anno.NCall;
+import top.ink.nrpccore.netty.client.Client;
 import top.ink.nrpccore.proxy.RpcProxy;
 import top.ink.nrpccore.util.SpringBeanFactory;
 
@@ -34,10 +35,13 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
     @Resource
     private ApplicationContext context;
 
+    private Client client;
+
     @PostConstruct
     public void init(){
         SpringBeanFactory springBeanFactory = (SpringBeanFactory) context.getBean("SpringBeanFactory");
         springBeanFactory.setApplicationContext(context);
+        client = new Client();
     }
 
     @Override
@@ -76,7 +80,7 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
         return elements;
     }
 
-    static class AnnotatedInjectionMetadata extends InjectionMetadata {
+    class AnnotatedInjectionMetadata extends InjectionMetadata {
 
         private final Collection<InjectedElement> fieldElements;
 
@@ -93,7 +97,7 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
 
     }
 
-    static class AnnotatedFieldElement extends InjectionMetadata.InjectedElement {
+    class AnnotatedFieldElement extends InjectionMetadata.InjectedElement {
 
         private final Field field;
 
@@ -106,12 +110,8 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
         protected void inject(Object bean, String beanName, PropertyValues pvs) throws Throwable {
 
             String serviceName = field.getAnnotation(NCall.class).ServiceName();
-            if (!RpcProxy.SERVICE_NAME_MAP_CHANNEL.containsKey(serviceName)){
-                Channel channel = RpcProxy.initChannel(serviceName);
-                RpcProxy.SERVICE_NAME_MAP_CHANNEL.put(serviceName,channel);
-                RpcProxy.CHANNEL_MAP_SERVICE_NAME.put(channel,serviceName);
-            }
-            Object o = RpcProxy.getProxy(field);
+            RpcProxy rpcProxy = new RpcProxy(client,serviceName);
+            Object o = rpcProxy.getProxy(field.getType());
             ReflectionUtils.makeAccessible(field);
             field.set(bean,o);
         }

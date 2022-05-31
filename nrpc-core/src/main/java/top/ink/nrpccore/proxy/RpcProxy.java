@@ -15,6 +15,7 @@ import top.ink.nrpccore.netty.MessageFrameDecoder;
 import top.ink.nrpccore.netty.RpcCodec;
 import top.ink.nrpccore.entity.RpcRequest;
 import top.ink.nrpccore.handle.NrpcResponseHandle;
+import top.ink.nrpccore.netty.client.Client;
 import top.ink.nrpccore.util.SpringBeanFactory;
 
 import java.lang.reflect.Field;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * desc: NrpcProxy
@@ -45,37 +47,64 @@ public class RpcProxy implements InvocationHandler {
     public static final Map<Channel, String> CHANNEL_MAP_SERVICE_NAME = new ConcurrentHashMap<>();
 
     /** 缓存proxy对象,提升性能 */
-    public static final Map<String, Object> PROXY_MAP = new ConcurrentHashMap<>();
+    public static final Map<Class<?>, Object> PROXY_MAP = new ConcurrentHashMap<>();
+
+    private Client client;
+    private String serviceName;
+
+    private static AtomicInteger RPC_ID = new AtomicInteger(10000);
+
+    public RpcProxy(Client client, String serviceName) {
+        this.client = client;
+        this.serviceName = serviceName;
+    }
 
     public <T> T getProxy(Class<T> clazz){
-        return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, this);
+        if (!PROXY_MAP.containsKey(clazz)){
+            T proxy = (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, this);
+            PROXY_MAP.put(clazz, proxy);
+        }
+        return (T) PROXY_MAP.get(clazz);
+    }
+
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        RpcRequest rpcRequest = RpcRequest.builder()
+                .methodName(method.getName())
+                .serviceName(serviceName)
+                .parameterTypes(method.getParameterTypes())
+                .parameterValues(args)
+                .rpcId(RPC_ID.getAndIncrement()).build();
+        return client.sendRequest(rpcRequest);
     }
 
     public static Object getProxy(Field field) throws ClassNotFoundException {
-        String className = field.getType().getName();
-        if (PROXY_MAP.containsKey(className)){
-            return PROXY_MAP.get(className);
-        }else{
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            Object o = Proxy.newProxyInstance(loader, new Class[]{Class.forName(className)}, (proxy, method, args) -> {
-                String nid = UUID.randomUUID().toString().replaceAll("-", "");
-                String serviceName = field.getAnnotation(NCall.class).ServiceName();
-                RpcRequest nrpcRequest = new RpcRequest(nid, serviceName, method.getName(), method.getParameterTypes(), args);
-                Channel channel = SERVICE_NAME_MAP_CHANNEL.get(serviceName);
-                DefaultPromise<Object> promise = new DefaultPromise<>(channel.eventLoop());
-                NrpcResponseHandle.PROMISE_MAP.put(nrpcRequest.getNid(), promise);
-                channel.writeAndFlush(nrpcRequest);
-                promise.await();
-                log.info(promise.isSuccess()+"");
-                if (promise.isSuccess()){
-                    return promise.getNow();
-                }else{
-                    throw new RuntimeException(promise.cause());
-                }
-            });
-            PROXY_MAP.put(className, o);
-            return o;
-        }
+        return null;
+//        String className = field.getType().getName();
+//        if (PROXY_MAP.containsKey(className)){
+//            return PROXY_MAP.get(className);
+//        }else{
+//            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+//            Object o = Proxy.newProxyInstance(loader, new Class[]{Class.forName(className)}, (proxy, method, args) -> {
+//                String nid = UUID.randomUUID().toString().replaceAll("-", "");
+//                String serviceName = field.getAnnotation(NCall.class).ServiceName();
+//                RpcRequest nrpcRequest = new RpcRequest(nid, serviceName, method.getName(), method.getParameterTypes(), args);
+//                Channel channel = SERVICE_NAME_MAP_CHANNEL.get(serviceName);
+//                DefaultPromise<Object> promise = new DefaultPromise<>(channel.eventLoop());
+//                NrpcResponseHandle.PROMISE_MAP.put(nrpcRequest.getNid(), promise);
+//                channel.writeAndFlush(nrpcRequest);
+//                promise.await();
+//                log.info(promise.isSuccess()+"");
+//                if (promise.isSuccess()){
+//                    return promise.getNow();
+//                }else{
+//                    throw new RuntimeException(promise.cause());
+//                }
+//            });
+//            PROXY_MAP.put(className, o);
+//            return o;
+//        }
     }
 
 
@@ -111,9 +140,5 @@ public class RpcProxy implements InvocationHandler {
         }
     }
 
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-        return null;
-    }
 }
