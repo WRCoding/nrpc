@@ -1,8 +1,8 @@
 package top.ink.nrpccore.entity;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.SuperBuilder;
 
 /**
  * desc: nrpc响应实体
@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Builder
+@SuperBuilder
 public class RpcResponse extends RpcMessage{
 
     private Object returnValue;

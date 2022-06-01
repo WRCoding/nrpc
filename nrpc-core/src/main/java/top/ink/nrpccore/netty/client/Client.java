@@ -24,10 +24,7 @@ import top.ink.nrpccore.util.SpringBeanFactory;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.*;
 
 /**
  * @author 林北
@@ -41,10 +38,15 @@ public class Client {
 
     private static final Map<String, Channel> CHANNEL_MAP = new ConcurrentHashMap<>();
 
-    /** 反存Channel和Service的关系,方便重连 */
-    public static final Map<Channel, String> CHANNEL_MAP_SERVICE = new ConcurrentHashMap<>();
+    private static final Integer RECONNECT_TIMEOUT = 20000;
 
-    public static AtomicInteger SEQ_ID = new AtomicInteger();
+    /**
+     * 反存Channel和Service的关系,方便重连
+     */
+    protected static final Map<Channel, String> CHANNEL_MAP_SERVICE = new ConcurrentHashMap<>();
+
+
+    protected static ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(10);
 
 
     public Client() {
@@ -60,22 +62,22 @@ public class Client {
                                 .addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS))
                                 .addLast(new MessageFrameDecoder())
                                 .addLast(new RpcCodec())
-                                .addLast(new ClientHandle());
+                                .addLast(new ClientHandle(Client.this));
                     }
                 });
-        serviceRegister = SpringBeanFactory.getBean("ServiceRegister",ServiceRegister.class);
+        serviceRegister = SpringBeanFactory.getBean("ServiceRegister", ServiceRegister.class);
     }
 
     @SneakyThrows
-    private Channel connect(String address){
+    private Channel connect(String address) {
         CompletableFuture<Channel> cf = new CompletableFuture<>();
         String[] ipAndPort = address.split(":");
         InetSocketAddress socketAddress = new InetSocketAddress(ipAndPort[0], Integer.parseInt(ipAndPort[1]));
-        bootstrap.connect(socketAddress).addListener( (ChannelFutureListener) future -> {
-            if (future.isSuccess()){
+        bootstrap.connect(socketAddress).addListener((ChannelFutureListener) future -> {
+            if (future.isSuccess()) {
                 log.info("client connected success address: {}", address);
                 cf.complete(future.channel());
-            }else{
+            } else {
                 throw new IllegalStateException();
             }
         });
@@ -83,39 +85,75 @@ public class Client {
     }
 
     @SneakyThrows
-    public Object sendRequest(RpcRequest rpcRequest){
-        String serviceAddress = serviceRegister.findServiceAddress(rpcRequest);
-        Channel channel = getChannel(serviceAddress);
+    public Object sendRequest(RpcRequest rpcRequest) {
+        Channel channel = getChannel(rpcRequest);
         DefaultPromise<Object> promise;
-        if (channel.isActive()){
+        if (channel.isActive()) {
             promise = new DefaultPromise<>(channel.eventLoop());
             RpcProtocol rpcProtocol = RpcProtocol.builder().magicNum(ProtocolConstants.MAGIC_NUM)
                     .version(ProtocolConstants.VERSION)
                     .msgType(ProtocolConstants.RPC_REQUEST)
                     .serializerType(SerializerType.JSON.getFlag())
-                    .seqId(SEQ_ID.incrementAndGet())
+                    .seqId(ProtocolConstants.getSeqId())
                     .data(rpcRequest).build();
             ClientHandle.PROMISE_MAP.put(rpcRequest.getRpcId(), promise);
             channel.writeAndFlush(rpcProtocol);
             promise.await();
-            if (promise.isSuccess()){
+            if (promise.isSuccess()) {
                 return promise.getNow();
-            }else{
+            } else {
                 throw new Exception(promise.cause());
             }
-        }else{
+        } else {
             throw new IllegalStateException();
         }
     }
 
-    private Channel getChannel(String serviceAddress) {
-        Channel channel = CHANNEL_MAP.get(serviceAddress);
-        if (channel == null){
-            channel = connect(serviceAddress);
-            CHANNEL_MAP.put(serviceAddress, channel);
-            CHANNEL_MAP_SERVICE.put(channel, serviceAddress);
-        }
+    private Channel getChannel(RpcRequest rpcRequest) {
+        String serviceName = rpcRequest.getServiceName();
+        Channel channel = CHANNEL_MAP.computeIfAbsent(serviceName,
+                (s -> connect(serviceRegister.findServiceAddress(serviceName))));
+        CHANNEL_MAP_SERVICE.put(channel, serviceName);
         return channel;
     }
+
+    public void reconnect(Channel channel) {
+        String serviceName = CHANNEL_MAP_SERVICE.remove(channel);
+        CHANNEL_MAP.remove(serviceName);
+        Long start = System.currentTimeMillis();
+        scheduledExecutorService.scheduleAtFixedRate(new ReConnectTask(start, serviceName), 1, 5, TimeUnit.SECONDS);
+    }
+
+    class ReConnectTask implements Runnable {
+
+        private final Long start;
+        private final String serviceName;
+
+        public ReConnectTask(Long start, String serviceName) {
+            this.start = start;
+            this.serviceName = serviceName;
+        }
+
+        @Override
+        public void run() {
+            if (System.currentTimeMillis() - start > RECONNECT_TIMEOUT) {
+                log.error("reconnect fail");
+                stopTask();
+            } else {
+                Channel newChannel = connect(serviceRegister.findServiceAddress(serviceName));
+                if (newChannel != null) {
+                    log.info("reconnect success");
+                    CHANNEL_MAP_SERVICE.put(newChannel, serviceName);
+                    CHANNEL_MAP.put(serviceName, newChannel);
+                    stopTask();
+                }
+            }
+        }
+
+        private void stopTask() {
+            scheduledExecutorService.shutdownNow();
+        }
+    }
+
 
 }

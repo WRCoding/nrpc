@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.ZkClient;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
@@ -18,8 +19,11 @@ import top.ink.nrpccore.netty.MessageFrameDecoder;
 import top.ink.nrpccore.netty.RpcCodec;
 import top.ink.nrpccore.entity.RpcProperties;
 import top.ink.nrpccore.handle.NrpcRequestHandle;
+import top.ink.nrpccore.netty.server.Server;
+import top.ink.nrpccore.registry.ServiceRegister;
 
 import javax.annotation.Resource;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,66 +37,36 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ServiceProcessor implements ApplicationContextAware, InitializingBean {
 
-    @Resource
-    private RpcProperties rpcProperties;
 
-    private ZkClient zkClient;
+    @Resource
+    private ServiceRegister serviceRegister;
+
+    @Value("${server.port}")
+    private Integer port;
 
     private static final String PREFIX = "/";
 
     private static final Map<String, Object> SERVICE_MAP = new ConcurrentHashMap<>();
 
+
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         Map<String, Object> nServiceMap = applicationContext.getBeansWithAnnotation(NService.class);
         if (nServiceMap.size() > 0) {
-            start();
-            zkClient = (ZkClient) applicationContext.getBean("zkClient");
+            Server.start(port + 10000);
             nServiceMap.forEach((key, value) -> {
-                registerService(value);
-                log.info("key:{},value:{}", key, value.getClass().getAnnotation(NService.class).ServiceName());
+                try {
+                    String serviceName = value.getClass().getAnnotation(NService.class).ServiceName();
+                    serviceRegister.registerService(serviceName, value);
+                } catch (UnknownHostException e) {
+                    log.error("registerService error: {}", e.getMessage());
+                }
             });
         }
     }
-
-    private void registerService(Object value){
-        String serviceName = value.getClass().getAnnotation(NService.class).ServiceName();
-        String rootPath = PREFIX + serviceName;
-        if (!zkClient.exists(rootPath)) {
-            zkClient.createPersistent(rootPath);
-        }
-        String path = rootPath + PREFIX + rpcProperties.getServerHost() + ":" + rpcProperties.getServerPort();
-        zkClient.createEphemeral(path);
-        SERVICE_MAP.put(serviceName, value);
-    }
-
-    private void start(){
-        try {
-            NioEventLoopGroup boss = new NioEventLoopGroup(1);
-            NioEventLoopGroup worker = new NioEventLoopGroup();
-            ServerBootstrap serverBootstrap = new ServerBootstrap().group(boss, worker)
-                    .channel(NioServerSocketChannel.class)
-                    .childHandler(new ChannelInitializer<NioSocketChannel>() {
-                        @Override
-                        protected void initChannel(NioSocketChannel ch) {
-                            ch.pipeline().addLast(new MessageFrameDecoder())
-                                    .addLast(new RpcCodec())
-                                    .addLast(new NrpcRequestHandle(SERVICE_MAP));
-                        }
-                    });
-            ChannelFuture future = serverBootstrap.bind(rpcProperties.getServerPort()).sync();
-            future.channel().closeFuture().addListener(elem -> {
-                boss.shutdownGracefully();
-                worker.shutdownGracefully();
-            });
-        } catch (InterruptedException e) {
-            log.error("netty 启动失败: {}", e.getMessage());
-        }
-    }
-
 
     @Override
     public void afterPropertiesSet() {
-        log.info("nrpc服务启动成功");
+
     }
 }

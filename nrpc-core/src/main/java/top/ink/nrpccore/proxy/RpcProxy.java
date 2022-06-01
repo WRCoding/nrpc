@@ -14,8 +14,8 @@ import top.ink.nrpccore.anno.NCall;
 import top.ink.nrpccore.netty.MessageFrameDecoder;
 import top.ink.nrpccore.netty.RpcCodec;
 import top.ink.nrpccore.entity.RpcRequest;
-import top.ink.nrpccore.handle.NrpcResponseHandle;
 import top.ink.nrpccore.netty.client.Client;
+import top.ink.nrpccore.netty.server.ServerHandle;
 import top.ink.nrpccore.util.SpringBeanFactory;
 
 import java.lang.reflect.Field;
@@ -39,20 +39,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RpcProxy implements InvocationHandler {
 
 
-    private static final String DIAGONAL = "/";
-
-    public static final Map<String, Channel> SERVICE_NAME_MAP_CHANNEL = new ConcurrentHashMap<>();
-
-    /** 反存Channel和Service的关系,方便重连 */
-    public static final Map<Channel, String> CHANNEL_MAP_SERVICE_NAME = new ConcurrentHashMap<>();
-
     /** 缓存proxy对象,提升性能 */
-    public static final Map<Class<?>, Object> PROXY_MAP = new ConcurrentHashMap<>();
+    protected static final Map<Class<?>, Object> PROXY_MAP = new ConcurrentHashMap<>();
 
-    private Client client;
-    private String serviceName;
+    private final Client client;
+    private final String serviceName;
 
-    private static AtomicInteger RPC_ID = new AtomicInteger(10000);
+    private static final AtomicInteger RPC_ID = new AtomicInteger(10000);
 
     public RpcProxy(Client client, String serviceName) {
         this.client = client;
@@ -108,37 +101,37 @@ public class RpcProxy implements InvocationHandler {
     }
 
 
-    public static Channel initChannel(String serviceName) throws InterruptedException {
-        ZkClient zkClient = SpringBeanFactory.getBean("zkClient", ZkClient.class);
-        String path = DIAGONAL + serviceName;
-        List<String> serviceList = zkClient.getChildren(path);
-        if (serviceList.size() > 0){
-            int index = ThreadLocalRandom.current().nextInt(serviceList.size());
-            String service = serviceList.get(index);
-            String[] hostAndPort = service.split(":");
-            NioEventLoopGroup work = new NioEventLoopGroup();
-            Bootstrap bootstrap = new Bootstrap().group(work)
-                    .channel(NioSocketChannel.class)
-                    .handler(new ChannelInitializer<NioSocketChannel>() {
-                        @Override
-                        protected void initChannel(NioSocketChannel ch) {
-                            ch.pipeline().addLast(new MessageFrameDecoder());
-                            ch.pipeline().addLast(new RpcCodec());
-                            ch.pipeline().addLast(new LoggingHandler());
-                            ch.pipeline().addLast(new NrpcResponseHandle());
-                        }
-                    });
-            ChannelFuture future = bootstrap.connect(hostAndPort[0], Integer.parseInt(hostAndPort[1])).sync();
-            Channel channel = future.channel();
-            channel.closeFuture().addListener(x -> {
-                work.shutdownGracefully();
-            });
-            log.info("serviceName: {}, 客户端启动: {}", serviceName, channel.id().asShortText());
-            return channel;
-        }else{
-            return null;
-        }
-    }
+//    public static Channel initChannel(String serviceName) throws InterruptedException {
+//        ZkClient zkClient = SpringBeanFactory.getBean("zkClient", ZkClient.class);
+//        String path = DIAGONAL + serviceName;
+//        List<String> serviceList = zkClient.getChildren(path);
+//        if (serviceList.size() > 0){
+//            int index = ThreadLocalRandom.current().nextInt(serviceList.size());
+//            String service = serviceList.get(index);
+//            String[] hostAndPort = service.split(":");
+//            NioEventLoopGroup work = new NioEventLoopGroup();
+//            Bootstrap bootstrap = new Bootstrap().group(work)
+//                    .channel(NioSocketChannel.class)
+//                    .handler(new ChannelInitializer<NioSocketChannel>() {
+//                        @Override
+//                        protected void initChannel(NioSocketChannel ch) {
+//                            ch.pipeline().addLast(new MessageFrameDecoder());
+//                            ch.pipeline().addLast(new RpcCodec());
+//                            ch.pipeline().addLast(new LoggingHandler());
+//                            ch.pipeline().addLast(new ServerHandle());
+//                        }
+//                    });
+//            ChannelFuture future = bootstrap.connect(hostAndPort[0], Integer.parseInt(hostAndPort[1])).sync();
+//            Channel channel = future.channel();
+//            channel.closeFuture().addListener(x -> {
+//                work.shutdownGracefully();
+//            });
+//            log.info("serviceName: {}, 客户端启动: {}", serviceName, channel.id().asShortText());
+//            return channel;
+//        }else{
+//            return null;
+//        }
+//    }
 
 
 }

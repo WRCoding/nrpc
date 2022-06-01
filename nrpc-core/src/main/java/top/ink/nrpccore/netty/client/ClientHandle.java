@@ -4,6 +4,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
 import top.ink.nrpccore.constant.ProtocolConstants;
@@ -25,7 +27,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ClientHandle extends SimpleChannelInboundHandler<RpcMessage> {
 
     public static Map<Integer, Promise<Object>> PROMISE_MAP = new ConcurrentHashMap<>();
+    private Client client;
 
+    public ClientHandle(Client client) {
+        this.client = client;
+    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, RpcMessage rpcMessage) {
@@ -40,7 +46,7 @@ public class ClientHandle extends SimpleChannelInboundHandler<RpcMessage> {
                 promise.setSuccess(value);
             }
         } else if (rpcMessage.getMsgType() == ProtocolConstants.PONG) {
-            log.info("heartbeat [{}]", ProtocolConstants.PONG_STR);
+            log.info("receive heartbeat [{}]", ProtocolConstants.PONG_STR);
         }
     }
 
@@ -53,11 +59,17 @@ public class ClientHandle extends SimpleChannelInboundHandler<RpcMessage> {
                         .magicNum(ProtocolConstants.MAGIC_NUM)
                         .version(ProtocolConstants.VERSION)
                         .serializerType(SerializerType.JSON.getFlag())
-                        .seqId(Client.SEQ_ID.incrementAndGet()).build();
+                        .seqId(ProtocolConstants.getSeqId()).build();
                 ctx.channel().writeAndFlush(rpcProtocol);
             }
         } else {
             super.userEventTriggered(ctx, evt);
         }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        client.reconnect(ctx.channel());
+        super.channelInactive(ctx);
     }
 }

@@ -7,6 +7,8 @@ import top.ink.nrpccore.registry.CuratorUtils;
 import top.ink.nrpccore.registry.ServiceRegister;
 import top.ink.nrpccore.route.RouteHandle;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,12 +29,14 @@ public class ZkServiceRegister implements ServiceRegister {
 
 
     @Override
-    public void registerService(String serviceName, String address) {
+    public void registerService(String serviceName, Object instance) throws UnknownHostException {
+        String address = InetAddress.getLocalHost().getHostAddress();
         if (!SERVICE_INSTANCE_MAP.containsKey(serviceName)){
             String path = CuratorUtils.ZK_REGISTER_ROOT_PATH +
                     CuratorUtils.LINE_SEPARATOR + serviceName + CuratorUtils.LINE_SEPARATOR + address;
             CuratorFramework zkClient = CuratorUtils.getZkClient();
             CuratorUtils.createPersistentNode(zkClient, path);
+            SERVICE_INSTANCE_MAP.put(serviceName, instance);
         }
     }
 
@@ -42,8 +46,7 @@ public class ZkServiceRegister implements ServiceRegister {
     }
 
     @Override
-    public String findServiceAddress(RpcRequest RpcRequest) {
-        String serviceName = RpcRequest.getServiceName();
+    public String findServiceAddress(String serviceName) {
         CuratorFramework zkClient = CuratorUtils.getZkClient();
         List<String> serviceAddressList = CuratorUtils.getChildrenNodes(zkClient, serviceName);
         return getRouteHandle().routeServe(serviceAddressList);

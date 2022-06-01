@@ -1,5 +1,7 @@
 package top.ink.nrpccore.constant;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * desc: 协议相关常量
  *
@@ -19,5 +21,11 @@ public class ProtocolConstants {
 
     public static final String PING_STR = "ping";
     public static final String PONG_STR = "pong";
+
+    public static AtomicInteger SEQ_ID = new AtomicInteger();
+
+    public static Integer getSeqId(){
+        return SEQ_ID.incrementAndGet();
+    }
 
 }
