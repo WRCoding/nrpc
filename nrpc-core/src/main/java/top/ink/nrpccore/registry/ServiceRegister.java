@@ -48,7 +48,5 @@ public interface ServiceRegister {
      * @date 2022/5/30 15:25
      * @return top.ink.nrpccore.route.RouteHandle
      */
-    default RouteHandle getRouteHandle(){
-        return SpringBeanFactory.getBean("RouteHandle",RouteHandle.class);
-    }
+
 }

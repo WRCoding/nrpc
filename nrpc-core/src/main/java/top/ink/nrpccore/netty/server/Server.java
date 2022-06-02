@@ -7,15 +7,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
-import top.ink.nrpccore.handle.NrpcRequestHandle;
 import top.ink.nrpccore.netty.MessageFrameDecoder;
 import top.ink.nrpccore.netty.RpcCodec;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * desc: 服务启动
@@ -44,6 +41,7 @@ public class Server {
                         }
                     });
             ChannelFuture future = serverBootstrap.bind(socketAddress).sync();
+            log.info("server init success [{}]", port);
             future.channel().closeFuture().addListener(elem -> {
                 boss.shutdownGracefully();
                 worker.shutdownGracefully();

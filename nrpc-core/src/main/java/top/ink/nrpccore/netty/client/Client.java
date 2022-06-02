@@ -49,7 +49,7 @@ public class Client {
     protected static ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(10);
 
 
-    public Client() {
+    public Client(ServiceRegister serviceRegister) {
         bootstrap = new Bootstrap();
         bootstrap.group(new NioEventLoopGroup())
                 .channel(NioSocketChannel.class)
@@ -65,7 +65,7 @@ public class Client {
                                 .addLast(new ClientHandle(Client.this));
                     }
                 });
-        serviceRegister = SpringBeanFactory.getBean("ServiceRegister", ServiceRegister.class);
+        this.serviceRegister = serviceRegister;
     }
 
     @SneakyThrows
@@ -78,7 +78,7 @@ public class Client {
                 log.info("client connected success address: {}", address);
                 cf.complete(future.channel());
             } else {
-                throw new IllegalStateException();
+//                throw new IllegalStateException();
             }
         });
         return cf.get();
@@ -112,7 +112,11 @@ public class Client {
     private Channel getChannel(RpcRequest rpcRequest) {
         String serviceName = rpcRequest.getServiceName();
         Channel channel = CHANNEL_MAP.computeIfAbsent(serviceName,
-                (s -> connect(serviceRegister.findServiceAddress(serviceName))));
+                (s -> {
+                    String serviceAddress = serviceRegister.findServiceAddress(serviceName);
+                    log.info("client connect [{}]", serviceAddress);
+                    return connect(serviceAddress);
+                }));
         CHANNEL_MAP_SERVICE.put(channel, serviceName);
         return channel;
     }
@@ -136,6 +140,7 @@ public class Client {
 
         @Override
         public void run() {
+            log.info("reconnecting...");
             if (System.currentTimeMillis() - start > RECONNECT_TIMEOUT) {
                 log.error("reconnect fail");
                 stopTask();

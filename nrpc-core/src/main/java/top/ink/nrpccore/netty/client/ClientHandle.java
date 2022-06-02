@@ -58,6 +58,7 @@ public class ClientHandle extends SimpleChannelInboundHandler<RpcMessage> {
                 RpcProtocol rpcProtocol = RpcProtocol.builder()
                         .magicNum(ProtocolConstants.MAGIC_NUM)
                         .version(ProtocolConstants.VERSION)
+                        .msgType(ProtocolConstants.PING)
                         .serializerType(SerializerType.JSON.getFlag())
                         .seqId(ProtocolConstants.getSeqId()).build();
                 ctx.channel().writeAndFlush(rpcProtocol);

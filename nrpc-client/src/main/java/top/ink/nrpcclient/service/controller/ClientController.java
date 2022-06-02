@@ -14,7 +14,7 @@ import top.ink.nrpccore.anno.NCall;
 @RestController
 public class ClientController {
 
-//    @NCall(ServiceName = "HelloServiceInterface")
+    @NCall(ServiceName = "HelloServiceInterface")
     public HelloServiceInterface helloServiceInterface;
 
     @GetMapping("/a")

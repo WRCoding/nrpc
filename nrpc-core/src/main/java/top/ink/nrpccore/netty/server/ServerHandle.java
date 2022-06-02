@@ -3,6 +3,7 @@ package top.ink.nrpccore.netty.server;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import top.ink.nrpccore.constant.ProtocolConstants;
 import top.ink.nrpccore.constant.SerializerType;
 import top.ink.nrpccore.entity.RpcMessage;
@@ -20,6 +21,7 @@ import java.lang.reflect.Method;
  * @date 2022-05-31 19:15
  */
 @Slf4j
+@Component
 public class ServerHandle extends SimpleChannelInboundHandler<RpcMessage> {
 
 

@@ -30,8 +30,6 @@ public class NCallRegistrar implements ImportBeanDefinitionRegistrar {
     }
 
     private void registerNCallAnnotationBeanPostProcessor(BeanDefinitionRegistry registry) {
-        RootBeanDefinition beanDefinition = new RootBeanDefinition(SpringBeanFactory.class);
-        registry.registerBeanDefinition("SpringBeanFactory",beanDefinition);
         registerInfrastructureBean(registry,
                 NCallAnnotationBeanPostProcessor.BEAN_NAME, NCallAnnotationBeanPostProcessor.class);
     }

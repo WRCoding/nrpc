@@ -13,6 +13,7 @@ import org.springframework.util.ReflectionUtils;
 import top.ink.nrpccore.anno.NCall;
 import top.ink.nrpccore.netty.client.Client;
 import top.ink.nrpccore.proxy.RpcProxy;
+import top.ink.nrpccore.registry.ServiceRegister;
 import top.ink.nrpccore.util.SpringBeanFactory;
 
 import javax.annotation.PostConstruct;
@@ -35,13 +36,16 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
     @Resource
     private ApplicationContext context;
 
+    @Resource
+    private ServiceRegister serviceRegister;
+
     private Client client;
 
     @PostConstruct
     public void init(){
         SpringBeanFactory springBeanFactory = (SpringBeanFactory) context.getBean("SpringBeanFactory");
         springBeanFactory.setApplicationContext(context);
-        client = new Client();
+        client = new Client(serviceRegister);
     }
 
     @Override

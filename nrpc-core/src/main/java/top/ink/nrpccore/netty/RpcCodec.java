@@ -29,7 +29,6 @@ public class RpcCodec extends ByteToMessageCodec<RpcProtocol> {
     protected void encode(ChannelHandlerContext ctx, RpcProtocol rpcProtocol, ByteBuf byteBuf) {
         byte msgType = rpcProtocol.getMsgType();
         byte serializerType = rpcProtocol.getSerializerType();
-
         byteBuf.writeBytes(rpcProtocol.getMagicNum());
         byteBuf.writeByte(rpcProtocol.getVersion());
         byteBuf.writeByte(7);
@@ -65,12 +64,12 @@ public class RpcCodec extends ByteToMessageCodec<RpcProtocol> {
         int length = byteBuf.readInt();
         byte msgType = byteBuf.readByte();
         byte serializerType = byteBuf.readByte();
-        int rpcId = byteBuf.readInt();
+        int seqId = byteBuf.readInt();
         if (msgType == ProtocolConstants.PING || msgType == ProtocolConstants.PONG){
             String data = msgType == ProtocolConstants.PING ? "ping" : "pong";
             RpcHeartBeat rpcHeartBeat = RpcHeartBeat.builder()
                     .msgType(msgType)
-                    .rpcId(rpcId)
+                    .rpcId(seqId)
                     .data(data).build();
             out.add(rpcHeartBeat);
         }
@@ -83,10 +82,12 @@ public class RpcCodec extends ByteToMessageCodec<RpcProtocol> {
             Serializer serializer = getSerializer(serializerType);
             if (msgType == ProtocolConstants.RPC_REQUEST){
                 RpcRequest rpcRequest = serializer.deserialize(RpcRequest.class, bytes);
+                rpcRequest.setMsgType(msgType);
                 out.add(rpcRequest);
             }
             if (msgType == ProtocolConstants.RPC_RESPONSE){
                 RpcResponse rpcResponse = serializer.deserialize(RpcResponse.class, bytes);
+                rpcResponse.setMsgType(msgType);
                 out.add(rpcResponse);
             }
         }

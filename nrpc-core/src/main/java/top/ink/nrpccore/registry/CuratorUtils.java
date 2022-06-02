@@ -9,9 +9,12 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
+import org.springframework.stereotype.Component;
 import top.ink.nrpccore.entity.RpcProperties;
 import top.ink.nrpccore.util.SpringBeanFactory;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
@@ -37,21 +40,19 @@ public class CuratorUtils {
     private static final Set<String> REGISTERED_PATH_SET = ConcurrentHashMap.newKeySet();
     private static CuratorFramework zkClient;
 
-    private CuratorUtils() {
-    }
 
     /**
      * Create persistent nodes. Unlike temporary nodes, persistent nodes are not removed when the client disconnects
      *
      * @param path node path
      */
-    public static void createPersistentNode(CuratorFramework zkClient, String path) {
+    public static void createEphemeralNode(CuratorFramework zkClient, String path) {
         try {
             if (REGISTERED_PATH_SET.contains(path) || zkClient.checkExists().forPath(path) != null) {
                 log.info("The node already exists. The node is:[{}]", path);
             } else {
                 //eg: /n-rpc/serviceName/127.0.0.1:9999
-                zkClient.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(path);
+                zkClient.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path);
                 log.info("The node was created successfully. The node is:[{}]", path);
             }
             REGISTERED_PATH_SET.add(path);
@@ -91,12 +92,11 @@ public class CuratorUtils {
         log.info("All registered services on the server are cleared:[{}]", REGISTERED_PATH_SET.toString());
     }
 
-    public static CuratorFramework getZkClient() {
+    public static CuratorFramework getZkClient(RpcProperties rpcProperties) {
         // check if user has set zk address
         if (zkClient != null && zkClient.getState() == CuratorFrameworkState.STARTED) {
             return zkClient;
         }
-        RpcProperties rpcProperties = SpringBeanFactory.getBean("RpcProperties", RpcProperties.class);
         String zkHost = rpcProperties.getZkHost();
         if (zkHost == null){
             throw new RuntimeException("zk address must not be null");
