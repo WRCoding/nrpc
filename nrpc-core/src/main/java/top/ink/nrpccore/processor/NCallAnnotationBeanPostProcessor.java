@@ -28,7 +28,8 @@ import java.util.*;
  * date:2022-05-14 11:03
  */
 @Slf4j
-public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPostProcessor, InstantiationAwareBeanPostProcessor {
+public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPostProcessor,
+        InstantiationAwareBeanPostProcessor {
 
 
     public static final String BEAN_NAME = "nCallAnnotationBeanPostProcessor";
@@ -42,7 +43,7 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
     private Client client;
 
     @PostConstruct
-    public void init(){
+    public void init() {
         SpringBeanFactory springBeanFactory = (SpringBeanFactory) context.getBean("SpringBeanFactory");
         springBeanFactory.setApplicationContext(context);
         client = new Client(serviceRegister);
@@ -55,10 +56,10 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
 
     @Override
     public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) throws BeansException {
-        InjectionMetadata metadata = findInjectionMetadata(beanName,bean.getClass());
-        if (metadata != null){
+        InjectionMetadata metadata = findInjectionMetadata(beanName, bean.getClass());
+        if (metadata != null) {
             try {
-                metadata.inject(bean,beanName,pvs);
+                metadata.inject(bean, beanName, pvs);
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -67,9 +68,9 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
     }
 
 
-
     private InjectionMetadata findInjectionMetadata(String beanName, Class<?> clazz) {
-        Collection<NCallAnnotationBeanPostProcessor.AnnotatedFieldElement> fieldElements = findFieldAnnotationMetadata(clazz);
+        Collection<NCallAnnotationBeanPostProcessor.AnnotatedFieldElement> fieldElements =
+                findFieldAnnotationMetadata(clazz);
         return fieldElements.size() > 0 ? new AnnotatedInjectionMetadata(clazz, combine(fieldElements)) : null;
     }
 
@@ -77,7 +78,7 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
         final List<NCallAnnotationBeanPostProcessor.AnnotatedFieldElement> elements = new LinkedList<>();
 
         ReflectionUtils.doWithFields(clazz, field -> {
-            if (field.isAnnotationPresent(NCall.class)){
+            if (field.isAnnotationPresent(NCall.class)) {
                 elements.add(new AnnotatedFieldElement(field));
             }
         });
@@ -114,10 +115,10 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
         protected void inject(Object bean, String beanName, PropertyValues pvs) throws Throwable {
 
             String serviceName = field.getAnnotation(NCall.class).ServiceName();
-            RpcProxy rpcProxy = new RpcProxy(client,serviceName);
+            RpcProxy rpcProxy = new RpcProxy(client, serviceName);
             Object o = rpcProxy.getProxy(field.getType());
             ReflectionUtils.makeAccessible(field);
-            field.set(bean,o);
+            field.set(bean, o);
         }
 
     }

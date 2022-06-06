@@ -78,7 +78,7 @@ public class Client {
                 log.info("client connected success address: {}", address);
                 cf.complete(future.channel());
             } else {
-//                throw new IllegalStateException();
+                throw new IllegalStateException();
             }
         });
         return cf.get();
@@ -98,7 +98,7 @@ public class Client {
                     .data(rpcRequest).build();
             ClientHandle.PROMISE_MAP.put(rpcRequest.getRpcId(), promise);
             channel.writeAndFlush(rpcProtocol);
-            promise.await();
+            promise.await(3,TimeUnit.SECONDS);
             if (promise.isSuccess()) {
                 return promise.getNow();
             } else {

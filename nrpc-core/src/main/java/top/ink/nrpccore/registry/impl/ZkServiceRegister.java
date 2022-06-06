@@ -4,11 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.springframework.beans.factory.annotation.Value;
 import top.ink.nrpccore.entity.RpcProperties;
-import top.ink.nrpccore.entity.RpcRequest;
 import top.ink.nrpccore.registry.CuratorUtils;
 import top.ink.nrpccore.registry.ServiceRegister;
 import top.ink.nrpccore.route.RouteHandle;
-import top.ink.nrpccore.util.SpringBeanFactory;
 
 import javax.annotation.Resource;
 import java.net.InetAddress;

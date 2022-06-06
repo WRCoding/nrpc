@@ -32,8 +32,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class CuratorUtils {
 
-    private static final int BASE_SLEEP_TIME = 1000;
-    private static final int MAX_RETRIES = 3;
     public static final String ZK_REGISTER_ROOT_PATH = "/n-rpc";
     public static final String LINE_SEPARATOR = "/";
     private static final Map<String, List<String>> SERVICE_ADDRESS_MAP = new ConcurrentHashMap<>();
@@ -67,7 +65,7 @@ public class CuratorUtils {
             return SERVICE_ADDRESS_MAP.get(serviceName);
         }
         List<String> result = null;
-        String servicePath = ZK_REGISTER_ROOT_PATH + "/" + serviceName;
+        String servicePath = ZK_REGISTER_ROOT_PATH + LINE_SEPARATOR + serviceName;
         try {
             result = zkClient.getChildren().forPath(servicePath);
             SERVICE_ADDRESS_MAP.put(serviceName, result);
@@ -102,7 +100,6 @@ public class CuratorUtils {
             throw new RuntimeException("zk address must not be null");
         }
         // Retry strategy. Retry 3 times, and will increase the sleep time between retries.
-        RetryPolicy retryPolicy = new ExponentialBackoffRetry(BASE_SLEEP_TIME, MAX_RETRIES);
         zkClient = CuratorFrameworkFactory.builder().connectionTimeoutMs(rpcProperties.getZkConnectTimeout())
                 // the server to connect to (can be a server list)
                 .connectString(zkHost)
@@ -122,10 +119,11 @@ public class CuratorUtils {
 
 
     private static void registerWatcher(String serviceName, CuratorFramework zkClient) throws Exception {
-        String servicePath = ZK_REGISTER_ROOT_PATH + "/" + serviceName;
+        String servicePath = ZK_REGISTER_ROOT_PATH + LINE_SEPARATOR + serviceName;
         PathChildrenCache pathChildrenCache = new PathChildrenCache(zkClient, servicePath, true);
         PathChildrenCacheListener pathChildrenCacheListener = (curatorFramework, pathChildrenCacheEvent) -> {
             List<String> serviceAddresses = curatorFramework.getChildren().forPath(servicePath);
+            SERVICE_ADDRESS_MAP.remove(serviceName);
             SERVICE_ADDRESS_MAP.put(serviceName, serviceAddresses);
         };
         pathChildrenCache.getListenable().addListener(pathChildrenCacheListener);

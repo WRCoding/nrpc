@@ -15,14 +15,14 @@ public class RpcJsonSerializer implements Serializer{
 
     @Override
     public <T> T deserialize(Class<T> clazz, byte[] bytes) {
-        Gson gson = new GsonBuilder().registerTypeAdapter(Class.class, new Algorithm.ClassCodec()).create();
+        Gson gson = new GsonBuilder().registerTypeAdapter(Class.class, new ClassCodec()).create();
         String json = new String(bytes, StandardCharsets.UTF_8);
         return gson.fromJson(json, clazz);
     }
 
     @Override
     public <T> byte[] serialize(T object) {
-        Gson gson = new GsonBuilder().registerTypeAdapter(Class.class, new Algorithm.ClassCodec()).create();
+        Gson gson = new GsonBuilder().registerTypeAdapter(Class.class, new ClassCodec()).create();
         String json = gson.toJson(object);
         return json.getBytes(StandardCharsets.UTF_8);
     }
