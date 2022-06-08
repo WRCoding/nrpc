@@ -20,6 +20,7 @@ import top.ink.nrpccore.entity.RpcRequest;
 import top.ink.nrpccore.netty.MessageFrameDecoder;
 import top.ink.nrpccore.netty.RpcCodec;
 import top.ink.nrpccore.registry.ServiceRegister;
+import top.ink.nrpccore.util.PropertiesUtil;
 import top.ink.nrpccore.util.SpringBeanFactory;
 
 import java.net.InetSocketAddress;
@@ -51,6 +52,7 @@ public class Client {
 
     public Client(ServiceRegister serviceRegister) {
         bootstrap = new Bootstrap();
+        ClientHandle clientHandle = new ClientHandle(this);
         bootstrap.group(new NioEventLoopGroup())
                 .channel(NioSocketChannel.class)
                 .handler(new LoggingHandler(LogLevel.INFO))
@@ -62,7 +64,7 @@ public class Client {
                                 .addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS))
                                 .addLast(new MessageFrameDecoder())
                                 .addLast(new RpcCodec())
-                                .addLast(new ClientHandle(Client.this));
+                                .addLast(clientHandle);
                     }
                 });
         this.serviceRegister = serviceRegister;
@@ -86,6 +88,8 @@ public class Client {
 
     @SneakyThrows
     public Object sendRequest(RpcRequest rpcRequest) {
+        String value = PropertiesUtil.getValue("n-rpc.serializer.type");
+        log.info("n-rpc.serializer.type: {}", value);
         Channel channel = getChannel(rpcRequest);
         DefaultPromise<Object> promise;
         if (channel.isActive()) {

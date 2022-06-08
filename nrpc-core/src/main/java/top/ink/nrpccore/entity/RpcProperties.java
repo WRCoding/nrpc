@@ -28,5 +28,7 @@ public class RpcProperties {
 
     private String route = RouteType.RANDOM.name();
 
+    private String serializerType;
+
     private String serviceRegister = ServiceRegisterType.ZOOKEEPER.name();
 }

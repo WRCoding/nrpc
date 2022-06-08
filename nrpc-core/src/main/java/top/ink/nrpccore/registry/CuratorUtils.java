@@ -123,7 +123,6 @@ public class CuratorUtils {
         PathChildrenCache pathChildrenCache = new PathChildrenCache(zkClient, servicePath, true);
         PathChildrenCacheListener pathChildrenCacheListener = (curatorFramework, pathChildrenCacheEvent) -> {
             List<String> serviceAddresses = curatorFramework.getChildren().forPath(servicePath);
-            SERVICE_ADDRESS_MAP.remove(serviceName);
             SERVICE_ADDRESS_MAP.put(serviceName, serviceAddresses);
         };
         pathChildrenCache.getListenable().addListener(pathChildrenCacheListener);

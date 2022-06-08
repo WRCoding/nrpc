@@ -21,7 +21,6 @@ import java.util.Map;
  * @author ink
  * date:2022-05-12 22:47
  */
-@Component
 @Slf4j
 public class ServiceProcessor implements ApplicationContextAware, InitializingBean {
 

@@ -1,6 +1,5 @@
 package top.ink.nrpccore.spi;
 
-import com.sun.scenario.effect.impl.prism.PrImage;
 import lombok.extern.slf4j.Slf4j;
 import top.ink.nrpccore.route.RouteHandle;
 
@@ -85,10 +84,6 @@ public class ExtensionLoad<T> {
         } catch (IOException | ClassNotFoundException e) {
             log.error("loadClassed error: {}", e.getMessage());
         }
-    }
-
-    public static void main(String[] args) {
-        ExtensionLoad.getExtensionLoader(RouteHandle.class).getExtension("aa");
     }
 
 }

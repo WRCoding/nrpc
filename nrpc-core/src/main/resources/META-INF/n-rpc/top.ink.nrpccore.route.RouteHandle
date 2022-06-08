@@ -1,1 +1,2 @@
-aa=top.ink.nrpccore.route.RandomRouteHandle
+random=top.ink.nrpccore.route.RandomRouteHandle
+loop=top.ink.nrpccore.route.LoopRouteHandle
