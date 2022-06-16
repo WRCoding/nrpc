@@ -34,7 +34,6 @@
             <artifactId>curator-recipes</artifactId>
             <version>4.2.0</version>
         </dependency>
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

@@ -26,9 +26,9 @@ public class RpcProperties {
 
     private Integer zkRetry = 3;
 
-    private String route = RouteType.RANDOM.name();
+    private String route = "random";
 
-    private String serializerType;
+    private String serviceRegister = "zookeeper";
 
-    private String serviceRegister = ServiceRegisterType.ZOOKEEPER.name();
+    private String proxy = "jdk";
 }

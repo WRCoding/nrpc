@@ -17,23 +17,30 @@ import java.util.Properties;
  */
 @Slf4j
 public class PropertiesFileUtil {
+
+    private static final Properties PROPERTIES = new Properties();
+
     private PropertiesFileUtil() {
     }
 
-    public static Properties readPropertiesFile(String fileName) {
+     static {
         URL url = Thread.currentThread().getContextClassLoader().getResource("");
         String rpcConfigPath = "";
         if (url != null) {
-            rpcConfigPath = url.getPath() + fileName;
+            rpcConfigPath = url.getPath() + "application.properties";
         }
-        Properties properties = null;
         try (InputStreamReader inputStreamReader = new InputStreamReader(
                 new FileInputStream(rpcConfigPath), StandardCharsets.UTF_8)) {
-            properties = new Properties();
-            properties.load(inputStreamReader);
+            PROPERTIES.load(inputStreamReader);
         } catch (IOException e) {
-            log.error("occur exception when read properties file [{}]", fileName);
+            log.error("occur exception when read properties file [{}]", "application.properties");
         }
-        return properties;
+
     }
+
+    public static String getProperty(String key) {
+        return PROPERTIES.getProperty(key);
+    }
+
+
 }

@@ -1,0 +1,2 @@
+jdk=top.ink.nrpccore.proxy.JdkRpcProxy
+cglib=top.ink.nrpccore.proxy.CglibProxy

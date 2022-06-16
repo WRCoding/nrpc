@@ -11,6 +11,7 @@ import top.ink.nrpccore.registry.ServiceRegister;
 import top.ink.nrpccore.registry.impl.ZkServiceRegister;
 import top.ink.nrpccore.route.RandomRouteHandle;
 import top.ink.nrpccore.route.RouteHandle;
+import top.ink.nrpccore.spi.ExtensionLoad;
 
 import javax.annotation.Resource;
 import java.util.ServiceLoader;
@@ -32,32 +33,16 @@ public class BeanConfig {
     @Bean(value = "ServiceRegister")
     public ServiceRegister getServiceRegister(){
         String serviceRegisterType = properties.getServiceRegister();
-        ServiceRegister register;
-        if (ServiceRegisterType.CUSTOM.name().equals(serviceRegisterType)){
-            register = loadCustomClass(ServiceRegister.class);
-        }else{
-            register = new ZkServiceRegister();
-        }
-        return register;
+        return ExtensionLoad.getExtensionLoader(ServiceRegister.class)
+                .getExtension(serviceRegisterType);
     }
 
 
     @Bean(value = "RouteHandle")
     public RouteHandle getRouteHandle(){
         String routeType = properties.getRoute();
-        RouteHandle routeHandle;
-        if (RouteType.CUSTOM.name().equals(routeType)){
-            routeHandle = loadCustomClass(RouteHandle.class);
-        }else{
-            routeHandle = new RandomRouteHandle();
-        }
-        return routeHandle;
-    }
-
-
-    private <T> T loadCustomClass(Class<T> clazz) {
-        ServiceLoader<T> serviceLoader = ServiceLoader.load(clazz);
-        return serviceLoader.iterator().next();
+        return ExtensionLoad.getExtensionLoader(RouteHandle.class)
+                .getExtension(routeType);
     }
 
 }
