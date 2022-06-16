@@ -1,6 +1,5 @@
 package top.ink.nrpccore.processor;
 
-import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyValues;
@@ -12,8 +11,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.util.ReflectionUtils;
 import top.ink.nrpccore.anno.NCall;
 import top.ink.nrpccore.netty.client.Client;
+import top.ink.nrpccore.proxy.JdkRpcProxy;
 import top.ink.nrpccore.proxy.RpcProxy;
 import top.ink.nrpccore.registry.ServiceRegister;
+import top.ink.nrpccore.spi.ExtensionLoad;
+import top.ink.nrpccore.util.PropertiesFileUtil;
 import top.ink.nrpccore.util.SpringBeanFactory;
 
 import javax.annotation.PostConstruct;
@@ -115,7 +117,10 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
         protected void inject(Object bean, String beanName, PropertyValues pvs) throws Throwable {
 
             String serviceName = field.getAnnotation(NCall.class).ServiceName();
-            RpcProxy rpcProxy = new RpcProxy(client, serviceName);
+            String proxyType = PropertiesFileUtil.getProperty("proxy");
+            RpcProxy rpcProxy = ExtensionLoad.getExtensionLoader(RpcProxy.class).getExtension(proxyType,
+                    new Object[]{client, serviceName},
+                    Client.class, String.class);
             Object o = rpcProxy.getProxy(field.getType());
             ReflectionUtils.makeAccessible(field);
             field.set(bean, o);

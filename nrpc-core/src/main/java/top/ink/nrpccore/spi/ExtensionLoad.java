@@ -7,6 +7,8 @@ import top.ink.nrpccore.route.RouteHandle;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
@@ -55,6 +57,22 @@ public class ExtensionLoad<T> {
                 instance = (T) INSTANCE_MAP.get(_clazz.getName());
             }
         } catch (InstantiationException | IllegalAccessException e) {
+            log.error("getExtension error: {}", e.getMessage());
+        }
+        return instance;
+    }
+
+    public T getExtension(String name, Object[] paramValues, Class<?>... paramTypes){
+        T instance = null;
+        try {
+            Class<?> _clazz = getClasses().get(name);
+            instance = (T) INSTANCE_MAP.get(_clazz.getName());
+            if (instance == null){
+                Constructor<?> constructor = _clazz.getDeclaredConstructor(paramTypes);
+                INSTANCE_MAP.putIfAbsent(_clazz.getName(), constructor.newInstance(paramValues));
+                instance = (T) INSTANCE_MAP.get(_clazz.getName());
+            }
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             log.error("getExtension error: {}", e.getMessage());
         }
         return instance;
