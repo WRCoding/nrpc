@@ -1,5 +1,7 @@
 package top.ink.nrpccore.proxy;
 
+import com.alibaba.fastjson.JSON;
+import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.proxy.Enhancer;
 import top.ink.nrpccore.entity.RpcRequest;
@@ -8,6 +10,9 @@ import top.ink.nrpccore.netty.client.Client;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,7 +40,6 @@ public class JdkRpcProxy implements RpcProxy,InvocationHandler {
         this.serviceName = serviceName;
     }
 
-
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getProxy(Class<T> clazz){
@@ -49,17 +53,19 @@ public class JdkRpcProxy implements RpcProxy,InvocationHandler {
                 new Class[]{clazz},
                 this);
     }
-
-
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
+        Gson gson = new Gson();
+        Object[] params = new Object[args.length];
+        for (int i = 0; i < args.length; i++) {
+            params[i] = JSON.toJSONString(args[i]);
+        }
         RpcRequest rpcRequest = RpcRequest.builder()
                 .methodName(method.getName())
                 .serviceName(serviceName)
                 .parameterTypes(method.getParameterTypes())
-                .parameterValues(args)
+                .parameterValues(params)
                 .rpcId(RPC_ID.getAndIncrement()).build();
         return client.sendRequest(rpcRequest);
     }
-
 }

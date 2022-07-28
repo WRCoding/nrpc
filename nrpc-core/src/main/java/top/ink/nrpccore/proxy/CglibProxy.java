@@ -1,5 +1,6 @@
 package top.ink.nrpccore.proxy;
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
@@ -58,11 +59,15 @@ public class CglibProxy implements RpcProxy, MethodInterceptor {
 
     @Override
     public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+        Object[] params = new Object[objects.length];
+        for (int i = 0; i < objects.length; i++) {
+            params[i] = JSON.toJSONString(objects[i]);
+        }
         RpcRequest rpcRequest = RpcRequest.builder()
                 .methodName(method.getName())
                 .serviceName(serviceName)
                 .parameterTypes(method.getParameterTypes())
-                .parameterValues(objects)
+                .parameterValues(params)
                 .rpcId(RPC_ID.getAndIncrement()).build();
         return client.sendRequest(rpcRequest);
     }

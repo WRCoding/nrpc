@@ -28,6 +28,7 @@ public class RpcRequest extends RpcMessage {
     private Class<?>[] parameterTypes;
     /** 参数值 */
     private Object[] parameterValues;
+//    private String parameterValues;
 
 
 }

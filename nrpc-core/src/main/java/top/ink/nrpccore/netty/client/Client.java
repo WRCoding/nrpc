@@ -24,6 +24,7 @@ import top.ink.nrpccore.util.PropertiesUtil;
 import top.ink.nrpccore.util.SpringBeanFactory;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -49,6 +50,7 @@ public class Client {
 
     protected static ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(10);
 
+    protected static ScheduledFuture<?> scheduledFuture;
 
     public Client(ServiceRegister serviceRegister) {
         bootstrap = new Bootstrap();
@@ -72,6 +74,7 @@ public class Client {
 
     @SneakyThrows
     private Channel connect(String address) {
+        log.info("address: {}", address);
         CompletableFuture<Channel> cf = new CompletableFuture<>();
         String[] ipAndPort = address.split(":");
         InetSocketAddress socketAddress = new InetSocketAddress(ipAndPort[0], Integer.parseInt(ipAndPort[1]));
@@ -80,7 +83,8 @@ public class Client {
                 log.info("client connected success address: {}", address);
                 cf.complete(future.channel());
             } else {
-                throw new IllegalStateException();
+//                throw new IllegalStateException();
+                cf.complete(null);
             }
         });
         return cf.get();
@@ -102,7 +106,7 @@ public class Client {
                     .data(rpcRequest).build();
             ClientHandle.PROMISE_MAP.put(rpcRequest.getRpcId(), promise);
             channel.writeAndFlush(rpcProtocol);
-            promise.await(3,TimeUnit.SECONDS);
+            promise.await(3, TimeUnit.SECONDS);
             if (promise.isSuccess()) {
                 return promise.getNow();
             } else {
@@ -126,10 +130,13 @@ public class Client {
     }
 
     public void reconnect(Channel channel) {
+        SocketAddress socketAddress = channel.remoteAddress();
+        String inActiveAddress = socketAddress.toString().substring(1);
+        log.info("inActive: {}",inActiveAddress);
         String serviceName = CHANNEL_MAP_SERVICE.remove(channel);
         CHANNEL_MAP.remove(serviceName);
         Long start = System.currentTimeMillis();
-        scheduledExecutorService.scheduleAtFixedRate(new ReConnectTask(start, serviceName), 1, 5, TimeUnit.SECONDS);
+        scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(new ReConnectTask(start, serviceName, inActiveAddress), 1, 5, TimeUnit.SECONDS);
     }
 
     class ReConnectTask implements Runnable {
@@ -137,9 +144,12 @@ public class Client {
         private final Long start;
         private final String serviceName;
 
-        public ReConnectTask(Long start, String serviceName) {
+        private final String inActiveAddress;
+
+        public ReConnectTask(Long start, String serviceName, String inActiveAddress) {
             this.start = start;
             this.serviceName = serviceName;
+            this.inActiveAddress = inActiveAddress;
         }
 
         @Override
@@ -147,14 +157,14 @@ public class Client {
             log.info("reconnecting...");
             if (System.currentTimeMillis() - start > RECONNECT_TIMEOUT) {
                 log.error("reconnect fail");
-                stopTask();
+                scheduledFuture.cancel(true);
             } else {
                 Channel newChannel = connect(serviceRegister.findServiceAddress(serviceName));
                 if (newChannel != null) {
                     log.info("reconnect success");
                     CHANNEL_MAP_SERVICE.put(newChannel, serviceName);
                     CHANNEL_MAP.put(serviceName, newChannel);
-                    stopTask();
+                    scheduledFuture.cancel(true);
                 }
             }
         }

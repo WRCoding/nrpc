@@ -3,8 +3,6 @@ package top.ink.nrpccore.entity;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-import top.ink.nrpccore.constant.RouteType;
-import top.ink.nrpccore.constant.ServiceRegisterType;
 
 /**
  * desc: NrpcServerProperties
@@ -30,5 +28,15 @@ public class RpcProperties {
 
     private String serviceRegister = "zookeeper";
 
-    private String proxy = "jdk";
+    private String proxy;
+
+    private String threadPoolType = "eager";
+
+    private Integer threadNum = 0;
+
+    private Integer threadMaxNum = 200;
+
+    private Integer threadAliveMs = 60 * 1000;
+
+    private Integer threadQueueSize = 0;
 }

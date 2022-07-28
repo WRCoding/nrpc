@@ -12,7 +12,6 @@ public interface HelloServiceInterface {
      * @param elem
      * @return java.lang.String
      * Author: ink
-     * Date: 2022/5/15
     */
     String say(String elem);
 }

@@ -102,6 +102,7 @@ public class CuratorUtils {
         // Retry strategy. Retry 3 times, and will increase the sleep time between retries.
         zkClient = CuratorFrameworkFactory.builder().connectionTimeoutMs(rpcProperties.getZkConnectTimeout())
                 // the server to connect to (can be a server list)
+                .sessionTimeoutMs(2000)
                 .connectString(zkHost)
                 .retryPolicy(new ExponentialBackoffRetry(rpcProperties.getZkBaseSleepTimeMs(), rpcProperties.getZkRetry()))
                 .build();

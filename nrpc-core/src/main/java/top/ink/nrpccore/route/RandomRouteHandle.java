@@ -15,10 +15,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 public class RandomRouteHandle implements RouteHandle{
 
-    public RandomRouteHandle() {
-        log.info("--RandomRouteHandle--");
-    }
-
     @Override
     public String routeServe(List<String> allService) throws RuntimeException {
         if (allService.size() == 0){

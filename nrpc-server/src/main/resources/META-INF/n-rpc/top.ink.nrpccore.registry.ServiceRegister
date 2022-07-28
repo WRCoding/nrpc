@@ -1,0 +1,1 @@
+zookeeper=top.ink.nrpccore.registry.impl.ZkServiceRegister

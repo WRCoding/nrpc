@@ -1,5 +1,6 @@
 package top.ink.nrpccore.netty.client;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
@@ -24,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2022-05-31 19:13
  */
 @Slf4j
+@ChannelHandler.Sharable
 public class ClientHandle extends SimpleChannelInboundHandler<RpcMessage> {
 
     public static Map<Integer, Promise<Object>> PROMISE_MAP = new ConcurrentHashMap<>();
@@ -46,7 +48,7 @@ public class ClientHandle extends SimpleChannelInboundHandler<RpcMessage> {
                 promise.setSuccess(value);
             }
         } else if (rpcMessage.getMsgType() == ProtocolConstants.PONG) {
-            log.info("receive heartbeat [{}]", ProtocolConstants.PONG_STR);
+//            log.info("receive heartbeat [{}]", ProtocolConstants.PONG_STR);
         }
     }
 

@@ -117,7 +117,7 @@ public class NCallAnnotationBeanPostProcessor implements MergedBeanDefinitionPos
         protected void inject(Object bean, String beanName, PropertyValues pvs) throws Throwable {
 
             String serviceName = field.getAnnotation(NCall.class).ServiceName();
-            String proxyType = PropertiesFileUtil.getProperty("proxy");
+            String proxyType = PropertiesFileUtil.getProperty("n-rpc.proxy");
             RpcProxy rpcProxy = ExtensionLoad.getExtensionLoader(RpcProxy.class).getExtension(proxyType,
                     new Object[]{client, serviceName},
                     Client.class, String.class);

@@ -18,7 +18,7 @@ public interface ServiceRegister {
      * Description: 注册服务到注册中心
      * @param serviceName
      * @param instance
-     * return void
+     * @return void
      * Author: ink
      * Date: 2022/5/29
     */
@@ -43,10 +43,13 @@ public interface ServiceRegister {
     String findServiceAddress(String serviceName);
 
     /**
-     * 获取RouteHandle
-     * @author longxun.wang
-     * @date 2022/5/30 15:25
-     * @return top.ink.nrpccore.route.RouteHandle
-     */
+     * Description: 寻找新的地址
+     * @param serviceName
+     * @param inActiveAddress
+     * @return java.lang.String
+     * Author: ink
+     * Date: 2022/7/28
+    */
+    String getNewServiceAddress(String serviceName, String inActiveAddress);
 
 }

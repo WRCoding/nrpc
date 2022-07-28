@@ -14,6 +14,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * desc: zk注册中心
@@ -65,6 +66,22 @@ public class ZkServiceRegister implements ServiceRegister {
     public String findServiceAddress(String serviceName) {
         CuratorFramework zkClient = CuratorUtils.getZkClient(rpcProperties);
         List<String> serviceAddressList = CuratorUtils.getChildrenNodes(zkClient, serviceName);
+        for (String address : serviceAddressList) {
+            log.info("serviceName: {}",address);
+        }
         return routeHandle.routeServe(serviceAddressList);
+    }
+
+    @Override
+    public String getNewServiceAddress(String serviceName, String inActiveAddress) {
+        CuratorFramework zkClient = CuratorUtils.getZkClient(rpcProperties);
+        List<String> serviceAddressList = CuratorUtils.getChildrenNodes(zkClient, serviceName);
+        List<String> newAddressList = serviceAddressList.stream()
+                .filter(address -> !address.equals(inActiveAddress))
+                .collect(Collectors.toList());
+        for (String address : newAddressList) {
+            log.info("newServiceAddress: {}",address);
+        }
+        return routeHandle.routeServe(newAddressList);
     }
 }

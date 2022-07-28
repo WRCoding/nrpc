@@ -65,12 +65,15 @@ public class ExtensionLoad<T> {
         T instance = null;
         try {
             Class<?> _clazz = getClasses().get(name);
-            instance = (T) INSTANCE_MAP.get(_clazz.getName());
-            if (instance == null){
-                Constructor<?> constructor = _clazz.getDeclaredConstructor(paramTypes);
-                INSTANCE_MAP.putIfAbsent(_clazz.getName(), constructor.newInstance(paramValues));
-                instance = (T) INSTANCE_MAP.get(_clazz.getName());
-            }
+            Constructor<?> constructor = _clazz.getDeclaredConstructor(paramTypes);
+            instance = (T) constructor.newInstance(paramValues);
+//            instance = (T) INSTANCE_MAP.get(_clazz.getName());
+//            if (instance == null){
+//                Constructor<?> constructor = _clazz.getDeclaredConstructor(paramTypes);
+//                instance = (T) constructor.newInstance(paramValues);
+//                INSTANCE_MAP.putIfAbsent(_clazz.getName(), constructor.newInstance(paramValues));
+//                instance = (T) INSTANCE_MAP.get(_clazz.getName());
+//            }
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             log.error("getExtension error: {}", e.getMessage());
         }
