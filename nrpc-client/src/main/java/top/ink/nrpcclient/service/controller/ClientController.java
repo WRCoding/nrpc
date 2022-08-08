@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import top.ink.api.callapi.HelloServiceInterface;
 import top.ink.api.callapi.User;
 import top.ink.api.callapi.UserServiceInterface;
-import top.ink.nrpccore.anno.NCall;
+import top.ink.nrpccore.anno.RpcCall;
 
 /**
  * desc: Client
@@ -18,10 +18,10 @@ import top.ink.nrpccore.anno.NCall;
 @RestController
 public class ClientController {
 
-    @NCall(ServiceName = "HelloServiceInterface")
+    @RpcCall(ServiceName = "HelloServiceInterface")
     public HelloServiceInterface helloServiceInterface;
 
-    @NCall(ServiceName = "UserServiceInterface")
+    @RpcCall(ServiceName = "UserServiceInterface")
     public UserServiceInterface userServiceInterface;
 
     @GetMapping("/a")

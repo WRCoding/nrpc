@@ -3,7 +3,7 @@ package top.ink.nrpcserver.service;
 import lombok.extern.slf4j.Slf4j;
 import top.ink.api.callapi.User;
 import top.ink.api.callapi.UserServiceInterface;
-import top.ink.nrpccore.anno.NService;
+import top.ink.nrpccore.anno.RpcService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
  * @author ink
  * date:2022-07-28 16:04
  */
-@NService(ServiceName = "UserServiceInterface")
+@RpcService(ServiceName = "UserServiceInterface")
 @Slf4j
 public class UserService implements UserServiceInterface {
 

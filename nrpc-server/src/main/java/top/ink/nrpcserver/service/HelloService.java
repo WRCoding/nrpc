@@ -2,7 +2,7 @@ package top.ink.nrpcserver.service;
 
 import lombok.extern.slf4j.Slf4j;
 import top.ink.api.callapi.HelloServiceInterface;
-import top.ink.nrpccore.anno.NService;
+import top.ink.nrpccore.anno.RpcService;
 
 /**
  * desc: service
@@ -10,7 +10,7 @@ import top.ink.nrpccore.anno.NService;
  * @author ink
  * date:2022-05-12 23:11
  */
-@NService(ServiceName = "HelloServiceInterface")
+@RpcService(ServiceName = "HelloServiceInterface")
 @Slf4j
 public class HelloService implements HelloServiceInterface {
 

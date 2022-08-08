@@ -1,19 +1,23 @@
 package top.ink.nrpccore.anno;
 
+import org.springframework.stereotype.Service;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * desc: 调用注册的服务注解
+ * desc: 注册服务注解
  *
  * @author ink
- * date:2022-05-12 22:16
+ * date:2022-05-12 22:07
  */
-@Target({ElementType.FIELD})
+
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface NCall {
+@Service
+public @interface RpcService {
 
     /** 要注册的服务类名*/
     String ServiceName();

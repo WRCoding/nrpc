@@ -1,3 +1,3 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=top.ink.nrpccore.processor.ServiceProcessor,\
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=top.ink.nrpccore.processor.RpcProcessor,\
 top.ink.nrpccore.entity.RpcProperties,top.ink.nrpccore.registry.CuratorUtils,top.ink.nrpccore.util.BeanConfig,top.ink.nrpccore.netty.server.ServerHandle,\
 top.ink.nrpccore.util.SpringBeanFactory

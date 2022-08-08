@@ -49,7 +49,7 @@ public class CuratorUtils {
             if (REGISTERED_PATH_SET.contains(path) || zkClient.checkExists().forPath(path) != null) {
                 log.info("The node already exists. The node is:[{}]", path);
             } else {
-                //eg: /n-rpc/serviceName/127.0.0.1:9999
+                //path: /n-rpc/serviceName/127.0.0.1:9999
                 zkClient.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(path);
                 log.info("The node was created successfully. The node is:[{}]", path);
             }

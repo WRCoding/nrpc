@@ -83,7 +83,6 @@ public class Client {
                 log.info("client connected success address: {}", address);
                 cf.complete(future.channel());
             } else {
-//                throw new IllegalStateException();
                 cf.complete(null);
             }
         });
